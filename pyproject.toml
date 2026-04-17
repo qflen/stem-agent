@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stem-agent"
+version = "0.1.0"
+description = "A self-specializing AI agent that differentiates from an undifferentiated core into a task-specific specialist"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Stem Agent Author" }]
+
+dependencies = [
+    "openai>=1.12.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.1.0",
+    "typer>=0.9.0",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.3.0",
+    "coverage>=7.4.0",
+]
+
+[project.scripts]
+stem-agent = "stem_agent.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stem_agent"]
+
+[tool.ruff]
+src = ["src"]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["stem_agent"]
