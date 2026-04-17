@@ -6,11 +6,13 @@
 
 **Approach.** A stem agent begins undifferentiated, senses its domain through an LLM, proposes and sandboxes a new capability, plans a multi-pass review, assembles a specialized prompt from composable fragments, validates against a 20-sample benchmark, and either graduates to `SPECIALIZED` or rolls back with diagnostic adjustments. A state machine with guard predicates enforces that transitions only happen when quantitative criteria are met.
 
-**Architecture: Hexagonal (Ports & Adapters).** Core logic depends on `LLMPort` and `StoragePort` protocols, not concrete implementations. This is not decorative: the 142-test suite runs in under a second using a `FakeLLM` that never touches a network, and swapping providers is two method implementations.
+**Architecture: Hexagonal (Ports & Adapters).** Core logic depends on `LLMPort` and `StoragePort` protocols, not concrete implementations. The 142-test suite runs offline against a `FakeLLM` that never touches the network, and swapping providers is two method implementations.
 
 ![State machine](diagrams/state_machine.svg)
 
 ## 2. Architecture
+
+![Component architecture](diagrams/components.svg)
 
 ### Key Design Decisions
 
@@ -48,9 +50,11 @@ When validation fails, `diagnose_failure()` reads two signals: the benchmark com
 
 Every step of the loop is visible in the journal: the disagreement lands as a `DECISION`, the derived adjustment as a `ROLLBACK_REASON`, and the re-composed prompt's delta as a coloured-diff summary — also a `DECISION`. The next attempt is shaped by where the last one actually went wrong, not just by how far its F1 fell short.
 
+![Closed feedback loop on rollback](diagrams/feedback_loop.svg)
+
 ### Test Suite
 
-142 tests, under a second, zero network. Hypothesis property tests search 200 random transition sequences per invariant (rollback monotonicity, `FAILED`-is-terminal). `FakeLLM` is a first-class test double with canned responses for all 20 samples; `poor_fake_llm` returns deliberately degraded answers to exercise the failure path as rigorously as the happy path.
+142 tests, zero network, a few seconds end-to-end. Hypothesis property tests search 200 random transition sequences per invariant (rollback monotonicity, `FAILED`-is-terminal). `FakeLLM` is a first-class test double with canned responses for all 20 samples; `poor_fake_llm` returns deliberately degraded answers to exercise the failure path as rigorously as the happy path.
 
 ### 3.5 Results from a Live Run
 

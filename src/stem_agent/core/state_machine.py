@@ -137,9 +137,9 @@ def _guard_rollback_budget(ctx: dict[str, Any]) -> tuple[bool, str]:
 class StateMachine:
     """Manages the agent lifecycle with enforced transitions and guard predicates.
 
-    The state machine is not decorative — attempting an invalid transition
-    raises an exception. Guards are evaluated with provided context and all
-    must pass for a guarded transition to proceed.
+    An invalid transition raises ``InvalidTransitionError`` rather than
+    silently advancing. Guards are evaluated with provided context and
+    every guard must pass for a guarded transition to proceed.
     """
 
     TRANSITION_TABLE = _build_transition_table()
