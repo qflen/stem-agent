@@ -132,6 +132,16 @@ A real run against the OpenAI API (captured in `docs/example_run/journal.json`):
 
 Forty-two LLM calls (gpt-4o-mini for sensing/planning/baseline, gpt-4o for the specialized pass), forty-one thousand total tokens, no rollbacks, roughly twenty cents at current OpenAI pricing. The baseline zero is honest rather than flattering — the undifferentiated prompt does not ask for structured JSON, so the parser returns no categories on every sample. That is exactly the gap the pipeline exists to close. The cross-check layer also fired on this run, flagging two over-flags on structure and one `eval()` call the LLM missed, all logged as `DECISION` events.
 
+### 3.6 What surprised me, what failed
+
+**The baseline F1 of 0.00 is a parser artefact, not a triumph.** The undifferentiated prompt never asks for structured JSON, so the parser returns no categories on every sample. Part of the specialization delta is bought by asking for JSON at all, not by deeper reasoning. I considered nudging the baseline toward JSON to make the comparison "fairer," but the honest framing is that output-structure discipline is part of what specialization wins, and the numbers should say so.
+
+**Cross-check disagreements started life as a score input.** The first design penalized F1 when the LLM disagreed with the AST or the pattern scanner. That made validation stricter but taught the next attempt nothing. Feeding the disagreements back as prompt guidance — "N over-flags on short functions; N `eval()` calls the scanner caught" — is what actually closes the loop. That reframing took the longest.
+
+**FakeLLM substring routing is brittle.** When I drifted a prompt phrase during development the test double silently stopped matching, integration tests flipped to the default clean response, and the failure looked like a regression in the specialized agent. Renaming a prompt now means re-auditing the keys in `conftest.py`.
+
+**Capability generation nearly didn't ship.** Until late, the agent only selected from a fixed registry — a composer, not a stem cell. Admitting that, and adding the sandboxed generation phase, was the last meaningful change and the one that made the metaphor honest.
+
 ## 4. Trade-offs & Extensions
 
 ### Trade-offs Made
