@@ -14,6 +14,12 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from stem_agent.capabilities.tools import (
+    PatternMatch,
+    StructuralMetrics,
+    analyze_structure,
+    scan_patterns,
+)
 from stem_agent.core.journal import EvolutionJournal
 from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample, get_benchmark_corpus
 from stem_agent.evaluation.metrics import ClassificationMetrics, compute_metrics
@@ -197,30 +203,81 @@ def run_benchmark(
     return verdicts, metrics
 
 
+def format_tool_findings(metrics: StructuralMetrics | None, patterns: list[PatternMatch]) -> str:
+    """Render static-analysis output as a compact context block for the LLM.
+
+    Kept deliberately short: the specialized agent does not need a full
+    AST dump, it needs the few facts that discipline its confidence —
+    whether the code parsed at all, how long the longest function is,
+    how deep the nesting goes, and what the regex scanner caught.
+    """
+    lines = ["## Static Tool Findings"]
+    if metrics is None:
+        lines.append("- AST: code did not parse as Python")
+    else:
+        lines.append(
+            f"- AST: {metrics.function_count} function(s), "
+            f"max length {metrics.max_function_length} lines, "
+            f"max nesting depth {metrics.max_nesting_depth}, "
+            f"bare_except={'yes' if metrics.has_bare_except else 'no'}, "
+            f"eval_or_exec={'yes' if metrics.has_eval_or_exec else 'no'}"
+        )
+    if patterns:
+        lines.append("- Pattern scan matches:")
+        for match in patterns:
+            lines.append(f"    - line {match.line_number}: {match.pattern_description}")
+    else:
+        lines.append("- Pattern scan: no known-unsafe patterns matched")
+    return "\n".join(lines)
+
+
 def make_llm_review_fn(
     llm: LLMPort,
     model: str | None = None,
     *,
     journal: EvolutionJournal | None = None,
     phase: str = "validation",
+    use_tools: bool = False,
 ) -> ReviewFunction:
     """Create a review function backed by an LLM adapter.
 
     If ``journal`` is supplied, each call is logged as an ``LLM_CALL`` event
     with prompt hash, model, and token count pulled from ``llm.last_usage``.
 
+    When ``use_tools`` is ``True``, the deterministic static-analysis
+    tools (``analyze_structure`` and ``scan_patterns``) are invoked on
+    the code before the LLM is called, their output is injected into the
+    prompt as a ``## Static Tool Findings`` block, and each invocation
+    is recorded as a ``DECISION`` event. This is the specialized path —
+    the baseline stays untooled so the A/B comparison remains fair.
+
     Args:
         llm: An LLM adapter satisfying the LLMPort protocol.
         model: Optional model override.
         journal: If provided, log every review call to this journal.
         phase: Phase name attached to the logged event.
+        use_tools: If True, invoke static analysis tools before the LLM.
 
     Returns:
         A ReviewFunction compatible with run_benchmark.
     """
 
     def review_fn(code: str, system_prompt: str) -> str:
-        full_prompt = f"{system_prompt}\n\n## Code to Review\n```python\n{code}\n```"
+        tool_block = ""
+        if use_tools:
+            metrics = analyze_structure(code)
+            patterns = scan_patterns(code)
+            tool_block = format_tool_findings(metrics, patterns) + "\n\n"
+            if journal is not None:
+                journal.log_decision(
+                    phase=f"{phase}_tools",
+                    decision="Invoked analyze_structure and scan_patterns before review",
+                    reasoning=(
+                        f"ast={'parsed' if metrics is not None else 'parse_failed'}, "
+                        f"pattern_matches={len(patterns)}"
+                    ),
+                )
+        full_prompt = f"{system_prompt}\n\n{tool_block}## Code to Review\n```python\n{code}\n```"
         response = llm.generate(full_prompt, model=model)
         if journal is not None:
             usage = getattr(llm, "last_usage", None)

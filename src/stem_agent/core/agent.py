@@ -16,6 +16,7 @@ from rich.text import Text
 
 from stem_agent.adapters.json_storage import JsonStorageAdapter
 from stem_agent.capabilities.registry import CapabilityRegistry, build_default_registry
+from stem_agent.capabilities.tools import analyze_structure, scan_patterns
 from stem_agent.core.config import StemAgentConfig
 from stem_agent.core.journal import EvolutionJournal
 from stem_agent.core.state_machine import (
@@ -24,6 +25,7 @@ from stem_agent.core.state_machine import (
     StateMachine,
 )
 from stem_agent.evaluation.benchmark import (
+    format_tool_findings,
     parse_review_response,
 )
 from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample
@@ -196,7 +198,23 @@ class StemAgent:
         if self.state == AgentState.SPECIALIZED:
             self._state_machine.transition(AgentState.EXECUTING)
 
-        prompt = f"{self._agent_config.system_prompt}\n\n## Code to Review\n```python\n{code}\n```"
+        metrics = analyze_structure(code)
+        patterns = scan_patterns(code)
+        tool_block = format_tool_findings(metrics, patterns)
+        self._journal.log_decision(
+            phase="review",
+            decision="Invoked analyze_structure and scan_patterns before review",
+            reasoning=(
+                f"ast={'parsed' if metrics is not None else 'parse_failed'}, "
+                f"pattern_matches={len(patterns)}"
+            ),
+        )
+
+        prompt = (
+            f"{self._agent_config.system_prompt}\n\n"
+            f"{tool_block}\n\n"
+            f"## Code to Review\n```python\n{code}\n```"
+        )
         raw_response = self._llm.generate(prompt, model=self._agent_config.model)
         result = parse_review_response(raw_response)
         return result.model_dump()

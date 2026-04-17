@@ -80,6 +80,7 @@ class ValidationPhase:
                 model=agent_config.model,
                 journal=journal,
                 phase=f"{self.name}_specialized",
+                use_tools=True,
             )
 
         baseline_fn: ReviewFunction
