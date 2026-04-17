@@ -1,0 +1,86 @@
+direction: down
+
+core: Core {
+  label.near: bottom-center
+  style: {
+    fill: "#EAF2FF"
+    stroke: "#334455"
+  }
+  a: "StemAgent\norchestrator"
+  sm: StateMachine
+  j: EvolutionJournal
+  cfg: Config
+}
+
+phases: Phases {
+  label.near: bottom-center
+  style: {
+    fill: "#F2FBE8"
+    stroke: "#334455"
+  }
+  s: Sensing
+  p: Planning
+  sp: Specialization
+  v: Validation
+}
+
+caps: Capabilities {
+  label.near: bottom-center
+  style: {
+    fill: "#FFF4E0"
+    stroke: "#334455"
+  }
+  r: CapabilityRegistry
+  pl: PromptLibrary
+  t: "Static Analysis Tools"
+}
+
+eval: Evaluation {
+  label.near: bottom-center
+  style: {
+    fill: "#FCE8E8"
+    stroke: "#334455"
+  }
+  b: "Benchmark Runner"
+  m: "Classification Metrics"
+  c: Comparator
+  f: "Fixture Corpus"
+}
+
+ports: "Ports (Protocols)" {
+  label.near: bottom-center
+  style: {
+    fill: "#E8F0F8"
+    stroke: "#334455"
+  }
+  lp: LLMPort
+  stp: StoragePort
+}
+
+adapters: Adapters {
+  label.near: bottom-center
+  style: {
+    fill: "#F8E8F0"
+    stroke: "#334455"
+  }
+  oa: "OpenAI Adapter"
+  js: "JSON Storage"
+}
+
+core.a -> phases.s
+phases.p -> caps.r
+phases.sp -> caps.pl
+phases.v -> caps.t
+phases.v -> eval.b
+
+phases.v -> ports.lp: {style.stroke-dash: 3}
+core.a -> ports.stp: {style.stroke-dash: 3}
+
+adapters.oa -> ports.lp: {
+  style.stroke-dash: 3
+  target-arrowhead.shape: triangle
+}
+adapters.js -> ports.stp: {
+  style.stroke-dash: 3
+  target-arrowhead.shape: triangle
+}
