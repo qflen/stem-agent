@@ -1,0 +1,121 @@
+# Stem Agent
+
+A self-specializing AI agent that differentiates from an undifferentiated core into a task-specific specialist through guided differentiation.
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- An OpenAI API key
+
+### Setup
+
+```bash
+# Clone the repository
+git clone <repo-url>
+cd stem-agent
+
+# Create virtual environment and install
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Or with uv (faster)
+uv venv
+source .venv/bin/activate
+uv pip install -e ".[dev]"
+```
+
+### Configuration
+
+Set your OpenAI API key:
+
+```bash
+export OPENAI_API_KEY="your-key-here"
+
+# Or create a .env file
+echo 'OPENAI_API_KEY=your-key-here' > .env
+```
+
+### Usage
+
+```bash
+# Run the full differentiation process
+stem-agent differentiate --domain code_quality
+
+# Review a Python file with the specialized agent
+stem-agent review path/to/file.py
+
+# View evaluation results
+stem-agent evaluate
+
+# Pretty-print the evolution journal
+stem-agent journal --last
+```
+
+### Development
+
+```bash
+# Run tests
+make test
+
+# Run linter
+make lint
+
+# Format code
+make format
+
+# Run full evaluation
+make eval
+```
+
+## Architecture
+
+The stem agent follows a biological differentiation metaphor:
+
+```
+UNDIFFERENTIATED → SENSING → DIFFERENTIATING → VALIDATING ─┐
+     ↑                                          │           │
+     └──────────── ROLLBACK ◄───────────────────┘           │
+                                                            ▼
+                                                       SPECIALIZED → EXECUTING
+```
+
+### Phases
+
+1. **Sensing**: Queries an LLM to build structured domain knowledge
+2. **Planning**: Selects capabilities and designs a multi-pass review architecture
+3. **Specialization**: Assembles the specialized agent from prompt fragments and tools
+4. **Validation**: Benchmarks against a ground-truth corpus with regression gates
+5. **Execution**: The specialized agent reviews code
+
+### Key Design Decisions
+
+- **Ports & Adapters**: Core depends on protocols, not concrete implementations
+- **Guard predicates on transitions**: State machine enforces quantitative criteria
+- **Evolution journal**: Append-only event log — the agent's self-model
+- **Rollback with diagnosis**: Failed validation triggers adaptive re-specialization
+
+## Project Structure
+
+```
+src/stem_agent/
+├── core/           # Agent, state machine, journal, config
+├── phases/         # Sensing, planning, specialization, validation
+├── capabilities/   # Registry, tools, prompt library
+├── evaluation/     # Metrics, benchmark, comparator, fixtures
+├── ports/          # LLM and storage protocols
+└── adapters/       # OpenAI and JSON file implementations
+```
+
+## Evaluation
+
+The benchmark corpus contains 20 Python code samples with ground-truth labels:
+- 5 logic bugs (off-by-one, wrong operators, missing null checks)
+- 4 security vulnerabilities (SQL injection, path traversal, hardcoded credentials)
+- 4 code smells (deep nesting, god functions, dead code)
+- 2 performance issues (N+1 queries, unnecessary copies)
+- 5 clean code samples (adversarial true negatives that look suspicious but are correct)
+
+Metrics: precision, recall, F1, specificity — compared before/after specialization.
