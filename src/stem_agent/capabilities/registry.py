@@ -22,13 +22,23 @@ class CapabilityCategory(enum.Enum):
 
 @dataclass(frozen=True)
 class Capability:
-    """A named unit of functionality the agent can select."""
+    """A named unit of functionality the agent can select.
+
+    ``origin`` distinguishes hand-authored ``"registered"`` capabilities
+    from ``"generated"`` ones proposed by the agent during the
+    capability_generation phase. ``validator_code``, if set, is the
+    sandboxed static-analysis helper the agent proposed alongside the
+    prompt fragment — kept on the dataclass so the journal has a single
+    artefact to point at.
+    """
 
     name: str
     category: CapabilityCategory
     description: str
     prompt_fragment: str
     tags: frozenset[str] = field(default_factory=frozenset)
+    origin: str = "registered"
+    validator_code: str | None = None
 
 
 class CapabilityRegistry:

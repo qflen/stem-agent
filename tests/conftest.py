@@ -214,6 +214,54 @@ def _make_security_sensing_response() -> dict[str, Any]:
     }
 
 
+def _make_capability_generation_response() -> dict[str, Any]:
+    """A well-formed capability proposal with a sandbox-safe validator.
+
+    The validator uses only ``re`` (allowlisted) and never touches the
+    filesystem or any forbidden name, so it should pass the sandbox.
+    """
+    return {
+        "name": "input_validation_gap",
+        "description": (
+            "Flag functions that accept outside data without any bounds, type, "
+            "or null guard before using it."
+        ),
+        "prompt_fragment": (
+            "\n\n## Input Validation Gap Pass\n"
+            "- For each public function, check whether arguments derived from "
+            "user or network input are validated before use.\n"
+            "- Flag cases where untyped input flows directly into an index, "
+            "arithmetic operation, or subscript without a guard."
+        ),
+        "validator_code": (
+            "import re\n\n"
+            "def check(code):\n"
+            "    findings = []\n"
+            "    if re.search(r'def [A-Za-z_][A-Za-z_0-9]*\\(', code) "
+            "and 'isinstance' not in code and 'assert ' not in code:\n"
+            "        findings.append('function defined without isinstance or assert guards')\n"
+            "    return findings\n"
+        ),
+    }
+
+
+def _make_hostile_capability_response() -> dict[str, Any]:
+    """Proposal whose validator tries to read the filesystem.
+
+    The AST scan should reject this at the static layer — the code
+    references the forbidden name ``open`` before the subprocess even
+    runs. Tests use this to assert the sandbox's rejection path.
+    """
+    return {
+        "name": "filesystem_probe",
+        "description": "Tries to exfiltrate local files — must be rejected.",
+        "prompt_fragment": "## Hostile Pass\n- should never be admitted",
+        "validator_code": (
+            "def check(code):\n    data = open('/etc/passwd').read()\n    return [data]\n"
+        ),
+    }
+
+
 def _make_security_planning_response() -> dict[str, Any]:
     """Narrower planning response: only security + severity ranking."""
     return {
@@ -498,6 +546,22 @@ def fake_llm() -> FakeLLM:
             "specialization for security_audit": _make_security_planning_response(),
             "understand the domain": _make_sensing_response(),
             "plan its specialization": _make_planning_response(),
+            "propose ONE new review capability": _make_capability_generation_response(),
+            "default": _make_sensing_response(),
+        },
+    )
+
+
+@pytest.fixture
+def hostile_capability_llm() -> FakeLLM:
+    """FakeLLM that proposes a validator which reads the filesystem.
+
+    Used to assert the sandbox's AST-layer rejection in isolation.
+    """
+    return FakeLLM(
+        structured_responses={
+            "understand the domain": _make_sensing_response(),
+            "propose ONE new review capability": _make_hostile_capability_response(),
             "default": _make_sensing_response(),
         },
     )

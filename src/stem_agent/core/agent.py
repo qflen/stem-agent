@@ -27,6 +27,7 @@ from stem_agent.evaluation.benchmark import (
     parse_review_response,
 )
 from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample
+from stem_agent.phases.capability_generation import CapabilityGenerationPhase
 from stem_agent.phases.planning import PlanningPhase
 from stem_agent.phases.sensing import SensingPhase
 from stem_agent.phases.specialization import SpecializationPhase, SpecializedAgentConfig
@@ -98,6 +99,18 @@ class StemAgent:
         sensing = SensingPhase()
         self._context = sensing.execute(self._context, self._llm, self._journal)
         console.print("[green]  Sensing complete.[/green]")
+
+        # Phase 1.5: CAPABILITY GENERATION — one-shot, before the rollback loop.
+        # A rejected proposal leaves the registry untouched and differentiation
+        # continues on the pure composition path.
+        console.print("[dim]Phase 1.5: Proposing novel capability...[/dim]")
+        cap_gen = CapabilityGenerationPhase(registry=self._registry)
+        self._context = cap_gen.execute(self._context, self._llm, self._journal)
+        if self._context.get("generated_fragments"):
+            names = ", ".join(self._context["generated_fragments"].keys())
+            console.print(f"[green]  Admitted generated capability: {names}[/green]")
+        else:
+            console.print("[dim]  No generated capability admitted.[/dim]")
 
         # Enter differentiation loop (DIFFERENTIATING → VALIDATING → SPECIALIZED or ROLLBACK)
         while True:

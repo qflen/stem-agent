@@ -92,16 +92,31 @@ class SpecializationPhase:
             for adj in adjustments:
                 domain_insights += f"- {adj}\n"
 
+        generated_fragments = context.get("generated_fragments") or {}
         system_prompt = compose_system_prompt(
             capability_names=plan.selected_capabilities,
             domain_insights=domain_insights,
+            extra_fragments=generated_fragments,
         )
+
+        if generated_fragments:
+            journal.log_decision(
+                phase=self.name,
+                decision=(
+                    f"Spliced {len(generated_fragments)} generated fragment(s) into the prompt"
+                ),
+                reasoning=(
+                    "capability_generation produced: "
+                    + ", ".join(sorted(generated_fragments.keys()))
+                ),
+            )
 
         journal.log_decision(
             phase=self.name,
             decision="Composed system prompt",
             reasoning=f"Assembled from {len(plan.selected_capabilities)} capability fragments "
-            f"+ domain insights ({len(domain_insights)} chars)",
+            f"+ domain insights ({len(domain_insights)} chars) "
+            f"+ {len(generated_fragments)} generated fragment(s)",
         )
 
         # Log each capability addition
@@ -122,10 +137,15 @@ class SpecializationPhase:
             "each pass focuses on a specific issue category for higher precision",
         )
 
+        active_capabilities = list(plan.selected_capabilities)
+        for gen_name in generated_fragments:
+            if gen_name not in active_capabilities:
+                active_capabilities.append(gen_name)
+
         agent_config = SpecializedAgentConfig(
             system_prompt=system_prompt,
             review_passes=pass_names,
-            capabilities=plan.selected_capabilities,
+            capabilities=active_capabilities,
             model=context.get("execution_model", "gpt-4o"),
         )
 

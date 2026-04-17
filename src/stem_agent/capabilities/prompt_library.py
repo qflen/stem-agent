@@ -116,12 +116,17 @@ CAPABILITY_FRAGMENTS: dict[str, str] = {
 def compose_system_prompt(
     capability_names: list[str],
     domain_insights: str = "",
+    extra_fragments: dict[str, str] | None = None,
 ) -> str:
     """Assemble a system prompt from selected capability fragments.
 
     Args:
         capability_names: Names of capabilities to include.
         domain_insights: Additional insights from the sensing phase.
+        extra_fragments: Fragments for generated capabilities that do not
+            live in the hand-authored ``CAPABILITY_FRAGMENTS`` map. These
+            are appended after the registered fragments so a generated
+            pass extends the review instead of replacing one.
 
     Returns:
         Complete system prompt for the specialized agent.
@@ -131,10 +136,20 @@ def compose_system_prompt(
     if domain_insights:
         parts.append(f"\n## Domain-Specific Insights\n{domain_insights}")
 
+    appended: set[str] = set()
     for name in capability_names:
         fragment = CAPABILITY_FRAGMENTS.get(name)
         if fragment:
             parts.append(fragment)
+            appended.add(name)
+        elif extra_fragments and name in extra_fragments:
+            parts.append(extra_fragments[name])
+            appended.add(name)
+
+    if extra_fragments:
+        for name, fragment in extra_fragments.items():
+            if name not in appended:
+                parts.append(fragment)
 
     parts.append(OUTPUT_FORMAT_FRAGMENT)
     return "\n".join(parts)
