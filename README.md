@@ -1,5 +1,7 @@
 # Stem Agent
 
+[![CI](https://github.com/qflen/stem-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/qflen/stem-agent/actions/workflows/ci.yml)
+
 A self-specializing AI agent that differentiates from an undifferentiated core into a task-specific specialist through guided differentiation.
 
 ## Quick Start
