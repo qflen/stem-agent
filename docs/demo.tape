@@ -1,4 +1,4 @@
-Output docs/demo.gif
+Output docs/demo.mp4
 
 Set Shell "zsh"
 Set FontSize 14

@@ -4,9 +4,11 @@
 
 A self-specializing AI agent that differentiates from an undifferentiated core into a task-specific specialist through guided differentiation.
 
-![Demo: replaying a real differentiation run from its journal](docs/demo.gif)
+<video src="docs/demo.mp4" controls width="800" muted>
+Your browser does not support the video tag. <a href="docs/demo.mp4">Download the demo</a>.
+</video>
 
-The GIF above replays a recorded run from `docs/example_run/journal.json` — no live API calls — and lands on the headline numbers: baseline F1 `0.000` → specialized F1 `0.778` on the 20-sample benchmark.
+The clip above replays a recorded run from `docs/example_run/journal.json` — no live API calls — and lands on the headline numbers: baseline F1 `0.000` → specialized F1 `0.778` on the 20-sample benchmark. Pausable; 15 seconds.
 
 ## Quick Start
 
