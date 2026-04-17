@@ -68,13 +68,23 @@ class ValidationPhase:
             # Allow injection for testing
             review_fn = context["review_fn"]
         else:
-            review_fn = make_llm_review_fn(llm, model=agent_config.model)
+            review_fn = make_llm_review_fn(
+                llm,
+                model=agent_config.model,
+                journal=journal,
+                phase=f"{self.name}_specialized",
+            )
 
         baseline_fn: ReviewFunction
         if context.get("baseline_fn"):
             baseline_fn = context["baseline_fn"]
         else:
-            baseline_fn = make_llm_review_fn(llm, model=context.get("planning_model"))
+            baseline_fn = make_llm_review_fn(
+                llm,
+                model=context.get("planning_model"),
+                journal=journal,
+                phase=f"{self.name}_baseline",
+            )
 
         # Run baseline
         journal.log_decision(

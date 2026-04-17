@@ -66,6 +66,16 @@ class TestSensingPhase:
 
         assert fake_llm.calls[-1]["model"] == "gpt-4o-mini"
 
+    def test_records_token_count_from_llm_usage(
+        self, fake_llm: FakeLLM, journal: EvolutionJournal
+    ) -> None:
+        phase = SensingPhase()
+        phase.execute({"domain": "code_quality_analysis"}, fake_llm, journal)
+
+        llm_call = journal.get_events_by_type(EventType.LLM_CALL)[0]
+        assert isinstance(llm_call.data["token_count"], int)
+        assert llm_call.data["token_count"] > 0
+
     def test_handles_missing_domain_name(self, journal: EvolutionJournal) -> None:
         """If the LLM doesn't return domain_name, it's filled in from context."""
         llm = FakeLLM(
@@ -283,6 +293,20 @@ class TestValidationPhase:
 
         metric_events = journal.get_events_by_type(EventType.METRIC_MEASUREMENT)
         assert len(metric_events) >= 2  # baseline + specialized
+
+    def test_logs_llm_calls_with_token_counts(
+        self, fake_llm: FakeLLM, journal: EvolutionJournal, small_corpus
+    ) -> None:
+        """Each review call should land in the journal with a non-None token_count."""
+        config = SpecializedAgentConfig(system_prompt="Review.", capabilities=[])
+        phase = ValidationPhase(corpus=small_corpus)
+        phase.execute({"agent_config": config}, fake_llm, journal)
+
+        llm_calls = journal.get_events_by_type(EventType.LLM_CALL)
+        # Baseline + specialized, one per sample in the small corpus
+        assert len(llm_calls) == 2 * len(small_corpus)
+        assert all(isinstance(c.data["token_count"], int) for c in llm_calls)
+        assert journal.total_tokens > 0
 
 
 class TestDiagnoseFailure:

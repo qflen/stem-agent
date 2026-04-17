@@ -15,7 +15,14 @@ class LLMPort(Protocol):
     because any object with matching methods satisfies the contract —
     no inheritance required. This mirrors the extension-point philosophy:
     the core depends on shape, not lineage.
+
+    Adapters expose a ``last_usage`` attribute refreshed after each call
+    with ``prompt_tokens``, ``completion_tokens`` and ``total_tokens`` so
+    callers can journal cost without plumbing return-value changes through
+    every phase.
     """
+
+    last_usage: dict[str, int] | None
 
     def generate(self, prompt: str, *, model: str | None = None) -> str:
         """Generate a free-form text response.

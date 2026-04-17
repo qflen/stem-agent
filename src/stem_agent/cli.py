@@ -314,6 +314,8 @@ def _display_journal(journal: EvolutionJournal) -> None:
 
     console.print(tree)
     console.print(f"\n[dim]Total events: {len(journal)}[/dim]")
+    llm_calls = len(journal.get_events_by_type(EventType.LLM_CALL))
+    console.print(f"[dim]LLM calls: {llm_calls} · total tokens: {journal.total_tokens}[/dim]")
 
 
 # Support for `from stem_agent.cli import app` in typer

@@ -142,3 +142,25 @@ class TestTimestamps:
         assert journal.events[0].timestamp
         # Should be ISO format
         assert "T" in journal.events[0].timestamp
+
+
+class TestTotalTokens:
+    def test_empty_journal_has_zero_tokens(self, journal: EvolutionJournal) -> None:
+        assert journal.total_tokens == 0
+
+    def test_sums_across_llm_calls(self, journal: EvolutionJournal) -> None:
+        journal.log_llm_call("sensing", "gpt-4o-mini", "h1", token_count=120)
+        journal.log_llm_call("planning", "gpt-4o-mini", "h2", token_count=340)
+        journal.log_llm_call("validation", "gpt-4o", "h3", token_count=800)
+        assert journal.total_tokens == 1260
+
+    def test_ignores_llm_calls_without_token_count(self, journal: EvolutionJournal) -> None:
+        journal.log_llm_call("sensing", "gpt-4o-mini", "h1", token_count=100)
+        journal.log_llm_call("planning", "gpt-4o-mini", "h2")  # token_count=None
+        assert journal.total_tokens == 100
+
+    def test_ignores_non_llm_events(self, journal: EvolutionJournal) -> None:
+        journal.log_llm_call("sensing", "gpt-4o-mini", "h1", token_count=50)
+        journal.log_decision("planning", "d", "r")
+        journal.log_metric("validation", {"f1": 0.9})
+        assert journal.total_tokens == 50

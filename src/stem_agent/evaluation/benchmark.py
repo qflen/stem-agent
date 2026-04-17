@@ -14,6 +14,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from stem_agent.core.journal import EvolutionJournal
 from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample, get_benchmark_corpus
 from stem_agent.evaluation.metrics import ClassificationMetrics, compute_metrics
 from stem_agent.ports.llm import LLMPort
@@ -196,12 +197,23 @@ def run_benchmark(
     return verdicts, metrics
 
 
-def make_llm_review_fn(llm: LLMPort, model: str | None = None) -> ReviewFunction:
+def make_llm_review_fn(
+    llm: LLMPort,
+    model: str | None = None,
+    *,
+    journal: EvolutionJournal | None = None,
+    phase: str = "validation",
+) -> ReviewFunction:
     """Create a review function backed by an LLM adapter.
+
+    If ``journal`` is supplied, each call is logged as an ``LLM_CALL`` event
+    with prompt hash, model, and token count pulled from ``llm.last_usage``.
 
     Args:
         llm: An LLM adapter satisfying the LLMPort protocol.
         model: Optional model override.
+        journal: If provided, log every review call to this journal.
+        phase: Phase name attached to the logged event.
 
     Returns:
         A ReviewFunction compatible with run_benchmark.
@@ -209,6 +221,15 @@ def make_llm_review_fn(llm: LLMPort, model: str | None = None) -> ReviewFunction
 
     def review_fn(code: str, system_prompt: str) -> str:
         full_prompt = f"{system_prompt}\n\n## Code to Review\n```python\n{code}\n```"
-        return llm.generate(full_prompt, model=model)
+        response = llm.generate(full_prompt, model=model)
+        if journal is not None:
+            usage = getattr(llm, "last_usage", None)
+            journal.log_llm_call(
+                phase=phase,
+                model=model or "default",
+                prompt_hash=EvolutionJournal.hash_prompt(full_prompt),
+                token_count=usage.get("total_tokens") if usage else None,
+            )
+        return response
 
     return review_fn

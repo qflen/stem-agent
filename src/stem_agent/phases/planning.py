@@ -135,10 +135,12 @@ class PlanningPhase:
             prompt, SpecializationPlan, model=context.get("planning_model")
         )
 
+        usage = getattr(llm, "last_usage", None)
         journal.log_llm_call(
             phase=self.name,
             model=context.get("planning_model", "default"),
             prompt_hash=prompt_hash,
+            token_count=usage.get("total_tokens") if usage else None,
         )
 
         # Validate selected capabilities exist in registry

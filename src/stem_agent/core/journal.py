@@ -191,6 +191,18 @@ class EvolutionJournal:
             )
         )
 
+    @property
+    def total_tokens(self) -> int:
+        """Sum of ``token_count`` across every LLM_CALL event (ignoring None)."""
+        total = 0
+        for event in self._events:
+            if event.event_type != EventType.LLM_CALL:
+                continue
+            count = event.data.get("token_count")
+            if isinstance(count, int):
+                total += count
+        return total
+
     def get_events_by_type(self, event_type: EventType) -> list[JournalEvent]:
         """Filter events by type."""
         return [e for e in self._events if e.event_type == event_type]

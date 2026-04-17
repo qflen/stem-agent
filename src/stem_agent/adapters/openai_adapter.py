@@ -19,6 +19,7 @@ class OpenAIAdapter:
     def __init__(self, config: StemAgentConfig) -> None:
         self._config = config
         self._client: Any = None
+        self.last_usage: dict[str, int] | None = None
 
     def _get_client(self) -> Any:
         """Lazy-initialize the OpenAI client."""
@@ -28,6 +29,18 @@ class OpenAIAdapter:
             self._client = OpenAI(api_key=self._config.openai_api_key)
         return self._client
 
+    def _record_usage(self, response: Any) -> None:
+        """Capture ``response.usage`` into ``last_usage`` if the SDK returned it."""
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            self.last_usage = None
+            return
+        self.last_usage = {
+            "prompt_tokens": getattr(usage, "prompt_tokens", 0) or 0,
+            "completion_tokens": getattr(usage, "completion_tokens", 0) or 0,
+            "total_tokens": getattr(usage, "total_tokens", 0) or 0,
+        }
+
     def generate(self, prompt: str, *, model: str | None = None) -> str:
         """Generate a free-form text response via OpenAI chat completions."""
         client = self._get_client()
@@ -36,6 +49,7 @@ class OpenAIAdapter:
             messages=[{"role": "user", "content": prompt}],
             temperature=self._config.temperature,
         )
+        self._record_usage(response)
         return response.choices[0].message.content or ""
 
     def structured_generate(
@@ -67,6 +81,7 @@ class OpenAIAdapter:
             temperature=self._config.temperature,
             response_format={"type": "json_object"},
         )
+        self._record_usage(response)
 
         raw = response.choices[0].message.content or "{}"
         parsed = json.loads(raw)

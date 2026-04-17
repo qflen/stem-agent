@@ -41,6 +41,17 @@ class FakeLLM:
         self._structured_responses = structured_responses or {}
         self._default_response = default_response
         self.calls: list[dict[str, Any]] = []
+        self.last_usage: dict[str, int] | None = None
+
+    def _fake_usage(self, prompt: str, completion: str) -> dict[str, int]:
+        """Return ~4-chars-per-token estimates so token_count is populated."""
+        prompt_tokens = max(1, len(prompt) // 4)
+        completion_tokens = max(1, len(completion) // 4)
+        return {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens,
+        }
 
     def generate(self, prompt: str, *, model: str | None = None) -> str:
         """Return a canned response based on prompt substring matching."""
@@ -48,7 +59,9 @@ class FakeLLM:
 
         for key, response in self._responses.items():
             if key in prompt:
+                self.last_usage = self._fake_usage(prompt, response)
                 return response
+        self.last_usage = self._fake_usage(prompt, self._default_response)
         return self._default_response
 
     def structured_generate(
@@ -70,10 +83,12 @@ class FakeLLM:
 
         for key, data in self._structured_responses.items():
             if key in prompt:
+                self.last_usage = self._fake_usage(prompt, json.dumps(data))
                 return response_model.model_validate(data)
 
-        # Try to construct a minimal valid instance
-        return response_model.model_validate(self._structured_responses.get("default", {}))
+        fallback = self._structured_responses.get("default", {})
+        self.last_usage = self._fake_usage(prompt, json.dumps(fallback))
+        return response_model.model_validate(fallback)
 
 
 def _make_sensing_response() -> dict[str, Any]:
