@@ -4,7 +4,7 @@ install:
 	uv pip install -e ".[dev]"
 
 run:
-	stem-agent differentiate --domain code_quality
+	stem-agent differentiate --domain code_quality_analysis
 
 eval:
 	stem-agent evaluate

@@ -50,7 +50,7 @@ echo 'OPENAI_API_KEY=your-key-here' > .env
 
 ```bash
 # Run the full differentiation process
-stem-agent differentiate --domain code_quality
+stem-agent differentiate --domain code_quality_analysis
 
 # Review a Python file with the specialized agent
 stem-agent review path/to/file.py
