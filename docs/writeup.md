@@ -69,6 +69,8 @@ A real run against the OpenAI API (captured in `docs/example_run/journal.json`):
 
 Forty-two LLM calls (gpt-4o-mini for sensing/planning/baseline, gpt-4o for the specialized pass), forty-one thousand total tokens, no rollbacks, roughly twenty cents. The cross-check fired on this run too, flagging two structure over-flags and one `eval()` the LLM missed — all logged as `DECISION` events.
 
+Because this run graduates without exercising the rollback branch, a companion deterministic demo in `docs/example_run_rollback/` reproduces the F1-fails-guard → diagnose → re-specialize path against the same phase code (only the LLM boundary is scripted). Attempt 1 lands at F1=0.583 with the cross-check producing two structural over-flags and one `eval` miss; attempt 2 clears 1.000 after the derived adjustments are spliced into the composed prompt under the `IMPORTANT adjustments based on prior evaluation` marker.
+
 ### 3.6 What surprised me, what failed
 
 **The baseline F1 of 0.00 is a parser artefact, not a triumph.** The undifferentiated prompt never asks for structured JSON, so the parser returns no categories on every sample. Part of the specialization delta is bought by asking for JSON at all, not by deeper reasoning. I considered nudging the baseline toward JSON to make the comparison "fairer," but the honest framing is that output-structure discipline is part of what specialization wins, and the numbers should say so.
