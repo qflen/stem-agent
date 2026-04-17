@@ -123,6 +123,29 @@ class TestRollbackMechanism:
         assert success is False
         assert agent.state == AgentState.FAILED
 
+    def test_prompt_diff_logged_after_rollback(self, poor_fake_llm: FakeLLM) -> None:
+        """After at least one rollback, the journal carries a diff-summary decision.
+
+        We don't care about the exact line counts — only that the agent
+        noticed the prompt was re-composed and left an audit trail for it.
+        """
+        config = StemAgentConfig(
+            openai_api_key="test-key",
+            f1_threshold=0.95,
+            improvement_required=True,
+            max_rollback_attempts=2,
+        )
+        corpus = get_benchmark_corpus()
+        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent.differentiate(domain="code_quality_analysis")
+
+        decisions = agent.journal.get_events_by_type(EventType.DECISION)
+        diff_decisions = [
+            d for d in decisions if "Prompt re-composed after rollback" in d.data["decision"]
+        ]
+        assert len(diff_decisions) >= 1
+        assert diff_decisions[0].phase == "specialization"
+
     def test_rollback_logged_in_journal(self, poor_fake_llm: FakeLLM) -> None:
         config = StemAgentConfig(
             openai_api_key="test-key",

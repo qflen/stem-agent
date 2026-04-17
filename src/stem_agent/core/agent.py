@@ -7,10 +7,12 @@ UNDIFFERENTIATED through to SPECIALIZED (or FAILED).
 
 from __future__ import annotations
 
+import difflib
 from datetime import UTC
 from typing import Any
 
 from rich.console import Console
+from rich.text import Text
 
 from stem_agent.adapters.json_storage import JsonStorageAdapter
 from stem_agent.capabilities.registry import CapabilityRegistry, build_default_registry
@@ -62,6 +64,7 @@ class StemAgent:
             "max_rollback_attempts": config.max_rollback_attempts,
         }
         self._agent_config: SpecializedAgentConfig | None = None
+        self._previous_prompt: str | None = None
         self._storage = JsonStorageAdapter(config.journal_dir)
 
     @property
@@ -109,6 +112,11 @@ class StemAgent:
             specialization = SpecializationPhase(registry=self._registry)
             self._context = specialization.execute(self._context, self._llm, self._journal)
             console.print("[green]  Specialization complete.[/green]")
+
+            current_prompt = self._context["agent_config"].system_prompt
+            if self._previous_prompt is not None:
+                self._render_prompt_diff(self._previous_prompt, current_prompt)
+            self._previous_prompt = current_prompt
 
             # Phase 4: VALIDATING
             self._transition(AgentState.VALIDATING)
@@ -183,6 +191,49 @@ class StemAgent:
     def _transition(self, target: AgentState) -> None:
         """Execute a state transition with logging."""
         self._state_machine.transition(target, self._context)
+
+    def _render_prompt_diff(self, before: str, after: str) -> None:
+        """Render a colourised unified diff of two prompts and log a summary.
+
+        Rollback is where the agent *learns* — showing what the prompt
+        gained or lost across an attempt makes that learning legible to
+        a reviewer instead of buried inside "agent_config changed".
+        """
+        before_lines = before.splitlines()
+        after_lines = after.splitlines()
+        diff_lines = list(
+            difflib.unified_diff(
+                before_lines,
+                after_lines,
+                fromfile="prompt.before",
+                tofile="prompt.after",
+                lineterm="",
+            )
+        )
+        added = sum(1 for line in diff_lines if line.startswith("+") and not line.startswith("+++"))
+        removed = sum(
+            1 for line in diff_lines if line.startswith("-") and not line.startswith("---")
+        )
+
+        console.print("[bold]  Prompt diff (post-rollback):[/bold]")
+        for line in diff_lines:
+            if line.startswith("+++") or line.startswith("---") or line.startswith("@@"):
+                console.print(Text(line, style="cyan"))
+            elif line.startswith("+"):
+                console.print(Text(line, style="green"))
+            elif line.startswith("-"):
+                console.print(Text(line, style="red"))
+            else:
+                console.print(Text(line, style="dim"))
+
+        self._journal.log_decision(
+            phase="specialization",
+            decision=f"Prompt re-composed after rollback: +{added}/-{removed} lines",
+            reasoning=(
+                f"before={len(before)} chars, after={len(after)} chars; "
+                f"diff captured in CLI output for review"
+            ),
+        )
 
     def _save_journal(self) -> None:
         """Persist the evolution journal."""
