@@ -34,6 +34,10 @@ class StemAgentConfig(BaseSettings):
         default=0.0,
         description="Temperature for all differentiation calls (0 for reproducibility)",
     )
+    request_timeout: float = Field(
+        default=60.0,
+        description="Per-request timeout in seconds passed to the OpenAI client",
+    )
 
     # Validation thresholds — guard predicates for state transitions
     f1_threshold: float = Field(
