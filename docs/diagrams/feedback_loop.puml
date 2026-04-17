@@ -1,0 +1,58 @@
+@startuml feedback_loop
+title Stem Agent — Closed Feedback Loop on Rollback
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam sequence {
+  ArrowThickness 1.3
+  ArrowColor #345
+  ParticipantBackgroundColor #F5F7FA
+  ParticipantBorderColor #345
+  LifeLineBorderColor #789
+  LifeLineBackgroundColor #FAFBFD
+  GroupBackgroundColor #EAF2FF
+  GroupBorderColor #345
+}
+skinparam maxMessageSize 180
+
+participant "ValidationPhase" as V
+participant "Cross-check\n(AST + regex)" as X
+participant "EvolutionJournal" as J
+participant "diagnose_failure" as D
+participant "SpecializationPhase\n(next attempt)" as SP
+
+== Round 1: benchmark + cross-check ==
+V -> V : run baseline + specialized\non 20-sample corpus
+V -> X : replay each verdict
+activate X
+X -> J : DECISION — "LLM flagged structure\nbut AST metrics clean"
+X -> J : DECISION — "scanner caught eval()\nLLM missed"
+X --> V : disagreements[]
+deactivate X
+
+== Rollback: derive targeted adjustments ==
+V -> V : guard fails\n(F1 < threshold)
+V -> D : context incl.\ncross_check_disagreements
+activate D
+D -> D : N structure over-flags\n→ "be conservative"
+D -> D : N security misses\n→ "scan harder for: eval, ..."
+D -> J : ROLLBACK_REASON\n(adjustments[])
+D --> V : adjustments[]
+deactivate D
+
+== Round 2: re-plan with steering ==
+V -> SP : rollback_adjustments
+activate SP
+SP -> J : DECISION — "Applying N\nrollback adjustments"
+SP -> SP : inject into\ndomain_insights
+SP -> J : DECISION — "Prompt re-composed:\n+X / -Y lines"
+SP --> V : new agent_config
+deactivate SP
+
+note across
+  One causal chain, four event types, all visible from the journal alone.
+end note
+
+@enduml

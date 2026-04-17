@@ -1,0 +1,108 @@
+@startuml components
+title Stem Agent — Component Architecture (Hexagonal)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam componentStyle rectangle
+skinparam rectangle {
+  BackgroundColor #F5F7FA
+  BorderColor #345
+  RoundCorner 6
+}
+skinparam arrowThickness 1.2
+skinparam arrowColor #456
+skinparam package {
+  BorderColor #345
+  FontStyle bold
+}
+skinparam nodesep 20
+skinparam ranksep 40
+
+' ──────────────── Row 1: Core (driver) ────────────────
+package "Core" as core #EAF2FF {
+  rectangle "StemAgent\norchestrator" as A
+  rectangle "StateMachine" as SM
+  rectangle "EvolutionJournal" as J
+  rectangle "Config\n(pydantic-settings)" as CFG
+  A -[hidden]r- SM
+  SM -[hidden]r- J
+  J -[hidden]r- CFG
+}
+
+' ──────────────── Row 2: Phases + Ports side by side ────────────────
+package "Phases" as phases #F2FBE8 {
+  rectangle "Sensing" as S
+  rectangle "Planning" as P
+  rectangle "Specialization" as SP
+  rectangle "Validation" as V
+  S -[hidden]r- P
+  P -[hidden]r- SP
+  SP -[hidden]r- V
+}
+
+package "Ports (Protocols)" as ports #E8F0F8 {
+  rectangle "LLMPort" as LP
+  rectangle "StoragePort" as STP
+  LP -[hidden]d- STP
+}
+
+' Force Ports to the right of Phases on the same rank
+phases -[hidden]r- ports
+
+' ──────────────── Row 3: Capabilities | Evaluation | Adapters ────────────────
+package "Capabilities" as caps #FFF4E0 {
+  rectangle "CapabilityRegistry" as R
+  rectangle "PromptLibrary" as PL
+  rectangle "Static Analysis\nTools" as T
+  R -[hidden]r- PL
+  PL -[hidden]r- T
+}
+
+package "Evaluation" as eval #FCE8E8 {
+  rectangle "Benchmark Runner" as B
+  rectangle "Classification\nMetrics" as M
+  rectangle "Comparator" as C
+  rectangle "Fixture Corpus\n(20 + 8 samples)" as F
+  B -[hidden]r- M
+  M -[hidden]r- C
+  C -[hidden]r- F
+}
+
+package "Adapters" as adapters #F8E8F0 {
+  rectangle "OpenAI Adapter\n(retry + timeout)" as OA
+  rectangle "JSON Storage" as JS
+  OA -[hidden]r- JS
+}
+
+caps -[hidden]r- eval
+eval -[hidden]r- adapters
+
+' ──────────────── Arrows ────────────────
+
+' Orchestrator drives phases (down into row 2)
+A --> S
+A --> P
+A --> SP
+A --> V
+
+' Phases use supporting services (down into row 3)
+P --> R
+SP --> PL
+V --> T
+V --> B
+V --> C
+B --> M
+B --> F
+
+' Phases depend on LLMPort — right, within row 2, no crossings
+V ..> LP
+
+' Orchestrator depends on StoragePort
+A ..> STP
+
+' Adapters implement ports (up from row 3 into row 2)
+LP <|.. OA
+STP <|.. JS
+
+@enduml

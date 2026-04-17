@@ -1,0 +1,41 @@
+@startuml state_machine
+title Stem Agent — Lifecycle States and Transitions
+
+skinparam state {
+  BackgroundColor #F5F7FA
+  BorderColor #345
+  FontName Helvetica
+  FontSize 12
+}
+skinparam shadowing false
+skinparam arrowThickness 1.3
+skinparam arrowColor #345
+skinparam defaultFontSize 12
+
+hide empty description
+
+[*] -right-> UNDIFFERENTIATED
+UNDIFFERENTIATED -right-> SENSING
+SENSING -right-> DIFFERENTIATING
+DIFFERENTIATING -right-> VALIDATING
+
+VALIDATING -right-> SPECIALIZED : F1 >= threshold\n**AND** improvement\nover baseline
+SPECIALIZED -right-> EXECUTING : review(code)
+EXECUTING -right-> [*]
+
+VALIDATING -down-> ROLLBACK : rollback budget\nremaining
+ROLLBACK -up-> DIFFERENTIATING : re-plan with\ncross-check-derived\nadjustments
+
+VALIDATING -down-> FAILED : budget\nexhausted
+FAILED -right-> [*]
+
+note top of VALIDATING
+  Guards evaluated here:
+  • f1_above_threshold
+  • improvement_over_baseline
+  • rollback_budget_remaining
+  Failures land in the journal
+  as GUARD_FAILURE events.
+end note
+
+@enduml

@@ -8,77 +8,17 @@
 
 **Architecture choice: Hexagonal (Ports & Adapters).** The core logic depends on protocols (`LLMPort`, `StoragePort`), not concrete implementations. This is critical for two reasons: (1) the test suite runs 117 tests in under a second using a `FakeLLM` that never touches a network, and (2) swapping from OpenAI to any other provider requires implementing two methods — no core changes.
 
-```mermaid
-stateDiagram-v2
-    [*] --> UNDIFFERENTIATED
-    UNDIFFERENTIATED --> SENSING
-    SENSING --> DIFFERENTIATING
-    DIFFERENTIATING --> VALIDATING
-    VALIDATING --> SPECIALIZED : F1 >= threshold AND\nimprovement over baseline
-    VALIDATING --> ROLLBACK : rollback budget remaining
-    VALIDATING --> FAILED : budget exhausted
-    ROLLBACK --> DIFFERENTIATING
-    SPECIALIZED --> EXECUTING
-```
+![State machine](diagrams/state_machine.svg)
+
+*Rendered from `docs/diagrams/state_machine.puml`.*
 
 ## 2. Architecture
 
 ### Component Diagram
 
-```mermaid
-graph TB
-    subgraph Core
-        SM[State Machine]
-        J[Evolution Journal]
-        A[StemAgent Orchestrator]
-        CFG[Config<br>pydantic-settings]
-    end
+![Component architecture](diagrams/components.svg)
 
-    subgraph Phases
-        S[Sensing]
-        P[Planning]
-        SP[Specialization]
-        V[Validation]
-    end
-
-    subgraph Capabilities
-        R[Capability Registry]
-        PL[Prompt Library]
-        T[Static Analysis Tools]
-    end
-
-    subgraph Evaluation
-        B[Benchmark Runner]
-        M[Classification Metrics]
-        C[Comparator]
-        F[Fixture Corpus<br>20 samples]
-    end
-
-    subgraph Ports
-        LP[LLMPort<br>Protocol]
-        STP[StoragePort<br>Protocol]
-    end
-
-    subgraph Adapters
-        OA[OpenAI Adapter]
-        JS[JSON Storage]
-    end
-
-    A --> SM
-    A --> J
-    A --> S & P & SP & V
-    P --> R
-    SP --> PL
-    V --> B
-    B --> M
-    B --> F
-    V --> C
-    LP -.-> OA
-    STP -.-> JS
-    S & P & SP --> LP
-    V --> LP
-    A --> STP
-```
+*Rendered from `docs/diagrams/components.puml`.*
 
 ### Key Design Decisions
 
@@ -156,6 +96,10 @@ From the cross-check (the part that makes this a real feedback loop rather than 
 - N samples where the pattern scanner caught `eval()` / hardcoded credentials / `shell=True` / SQL string concat / `pickle.loads` that the LLM missed → "Scan harder for security patterns …" with the exact patterns named.
 
 These adjustments are injected into the next specialization attempt as extra prompt guidance, and every step of the loop is visible in the journal: the cross-check disagreement lands as a `DECISION`, the derived adjustment lands as a `ROLLBACK_REASON`, and the re-composed prompt's delta lands as a coloured diff summary — also a `DECISION`. The agent's next attempt is shaped by where it actually got things wrong, not just by how far its F1 fell short.
+
+![Closed feedback loop on rollback](diagrams/feedback_loop.svg)
+
+*Rendered from `docs/diagrams/feedback_loop.puml`.*
 
 ### Test Suite
 
