@@ -4,139 +4,72 @@
 
 **Problem.** General-purpose LLMs produce unfocused code reviews: they hallucinate issues in correct code, miss subtle bugs, and lack systematic evaluation against ground truth. The task is to build an agent that *specializes itself* for code quality analysis — starting undifferentiated and ending as a measurably better reviewer, with rollback if specialization fails.
 
-**Approach.** I modeled the agent lifecycle as a biological differentiation process. A stem agent begins undifferentiated, senses its domain through an LLM, plans a multi-pass review architecture, assembles a specialized prompt from composable fragments, validates performance against a 20-sample benchmark corpus, and either graduates to SPECIALIZED or rolls back with diagnostic adjustments. A state machine with guard predicates enforces that transitions only happen when quantitative criteria are met — this is not decorative.
+**Approach.** A stem agent begins undifferentiated, senses its domain through an LLM, proposes and sandboxes a new capability, plans a multi-pass review, assembles a specialized prompt from composable fragments, validates against a 20-sample benchmark, and either graduates to `SPECIALIZED` or rolls back with diagnostic adjustments. A state machine with guard predicates enforces that transitions only happen when quantitative criteria are met.
 
-**Architecture choice: Hexagonal (Ports & Adapters).** The core logic depends on protocols (`LLMPort`, `StoragePort`), not concrete implementations. This is critical for two reasons: (1) the test suite runs 117 tests in under a second using a `FakeLLM` that never touches a network, and (2) swapping from OpenAI to any other provider requires implementing two methods — no core changes.
+**Architecture: Hexagonal (Ports & Adapters).** Core logic depends on `LLMPort` and `StoragePort` protocols, not concrete implementations. This is not decorative: the 142-test suite runs in under a second using a `FakeLLM` that never touches a network, and swapping providers is two method implementations.
 
 ![State machine](diagrams/state_machine.svg)
 
-*Rendered from `docs/diagrams/state_machine.puml`.*
-
 ## 2. Architecture
-
-### Component Diagram
-
-![Component architecture](diagrams/components.svg)
-
-*Rendered from `docs/diagrams/components.puml`.*
 
 ### Key Design Decisions
 
 | Decision | Rationale |
 |---|---|
-| **Protocol over ABC** | Structural subtyping: any object with matching methods satisfies the contract. `FakeLLM` needs no inheritance — just `generate()` and `structured_generate()`. |
-| **Guard predicates on state transitions** | Not decorative. `VALIDATING → SPECIALIZED` requires F1 >= threshold AND improvement over baseline. These are evaluated at runtime with context data. |
-| **Append-only evolution journal** | Every decision, metric, LLM call, and state transition is recorded with timestamps. This is the agent's self-model — its memory of how it became what it is. |
-| **Composable prompt fragments** | The system prompt is assembled at specialization time from fragments mapped to capabilities. Rollback adjustments are injected as extra guidance without rewriting the base. |
-| **Category normalization** | LLMs produce varied category names ("sql_injection", "vulnerability", "security_vulnerability"). A normalization layer maps all variants to 4 canonical categories. |
-| **FakeLLM as first-class test double** | Not a mock — a deterministic response engine with substring-matched routing and call tracking. It models realistic LLM behavior for all 20 benchmark samples. |
-| **Sandboxed capability generation** | The generation phase executes LLM-proposed Python in a subprocess with Python's isolated mode, a `RLIMIT_CPU` cap, and a wall-clock timeout, gated by an allowlist AST scan that forbids `open`, `os`, `subprocess`, `__import__`, and similar. Defensible over `RestrictedPython`: two independent layers rather than one bytecode filter, and no external dependency. |
-| **Deterministic cross-check after validation** | Every specialized verdict is replayed through AST-based `analyze_structure` and regex-based `scan_patterns`. Disagreements land in the journal as `DECISION` events, so over-flags and misses are visible instead of hidden. |
-| **Closed-loop rollback diagnosis** | `diagnose_failure` reads both the benchmark metrics *and* the cross-check disagreements. N structure over-flags turn into "be conservative on structural issues (N samples)"; N security misses turn into "scan harder for: `eval()`, hardcoded credentials, …". The next specialization attempt is steered by where the last one actually went wrong, not only by how far its F1 fell short. |
-| **Prompt diff across rollback** | When specialization runs twice, the orchestrator renders a coloured unified diff between the before- and after-prompts and logs a one-line summary. Rollback stops being a black box. |
-| **Retry + timeout at the adapter boundary** | Four-attempt exponential backoff (1s→8s) on `RateLimitError`, `APITimeoutError`, `APIConnectionError`, plus a configurable `request_timeout`. Core and phase code stay ignorant of the network. |
+| **Protocol over ABC** | Structural subtyping: `FakeLLM` needs no inheritance — just `generate()` and `structured_generate()`. |
+| **Guarded state transitions** | `VALIDATING → SPECIALIZED` requires F1 >= threshold AND improvement over baseline. Guard reasons land in the journal. |
+| **Append-only evolution journal** | Every decision, metric, LLM call, and transition is recorded. The agent's memory of how it became what it is. |
+| **Composable prompt fragments** | Prompts are assembled at specialization time. Rollback adjustments are injected as extra guidance without rewriting the base. |
+| **Sandboxed capability generation** | LLM-proposed Python runs in a Python-isolated-mode subprocess with `RLIMIT_CPU` and a wall-clock timeout, gated by an allowlist AST scan that forbids `open`, `os`, `subprocess`, `__import__`. Two independent layers, no external dependency — defensible over `RestrictedPython`. |
+| **Static tools in the review prompt** | `analyze_structure` (AST) and `scan_patterns` (regex) run on the input before every specialized review, and their findings are injected as a `## Static Tool Findings` block. The baseline stays untooled so the A/B is honest about what specialization contributes. |
+| **Cross-check → rollback adjustments** | Every specialized verdict is replayed through the deterministic checks. Disagreements become targeted prompt fixes on the next attempt: `N` structure over-flags turn into "be conservative on short functions"; `N` scanner-caught security misses turn into "scan harder for eval/hardcoded credentials". |
+| **Prompt diff across rollback** | When specialization runs twice, a coloured unified diff is rendered and a one-line summary logged. Rollback stops being a black box. |
+| **Retry + timeout at the adapter** | Exponential backoff on transient OpenAI errors and a configurable `request_timeout`. Core and phase code stay ignorant of the network. |
 
-### State Machine Detail
-
-The state machine enforces 8 transitions between 8 states. Three transitions are guarded:
-
-- **VALIDATING → SPECIALIZED**: `f1_above_threshold` (F1 >= 0.6) AND `improvement_over_baseline` (specialized F1 > baseline F1)
-- **VALIDATING → ROLLBACK**: `rollback_budget_remaining` (attempts < max, default 3)
-- **VALIDATING → FAILED**: Unguarded fallback when rollback budget is exhausted
-
-Guard failures are logged to the journal with the guard name, transition, and reason string. This creates a traceable audit trail for why the agent could not graduate.
-
-### Differentiation Lifecycle
-
-1. **Sensing**: Queries the LLM with a domain signal ("code_quality_analysis") to build structured `DomainKnowledge` — review strategies, issue taxonomy, tool categories, key insights.
-2. **Capability generation**: Asks the LLM to propose ONE new capability the registry does not already have — a name, a prompt fragment, and optionally a small Python `check(code) -> list[str]` helper. The proposed Python is put through a two-layer sandbox (allowlist AST scan + Python isolated-mode subprocess with CPU rlimit and wall-clock timeout). Accepted proposals are registered with `origin="generated"`; rejected ones leave the registry untouched and a `DECISION` event records why. This is the move that earns the stem metaphor: the agent grows a capability it didn't start with, instead of only composing pre-authored ones.
-3. **Planning**: Selects capabilities from the (possibly extended) registry, designs a multi-pass review pipeline (structural → logic → security → performance → severity), and validates that all capability names actually exist (hallucinated names are logged and dropped).
-4. **Specialization**: Assembles the system prompt from `BASE_REVIEW_PROMPT` + domain insights + capability fragments (registered and generated) + output format specification. On rollback, adjustments from `diagnose_failure()` are injected as additional guidance. At review time the specialized path runs `analyze_structure` and `scan_patterns` on the input *before* calling the LLM and injects the result as a `## Static Tool Findings` block into the prompt — each invocation logged as a `DECISION` event. Tools are no longer advertised in the prompt and then ignored; they fire on every specialized review, including every one of the 20 samples the validation phase scores.
-5. **Validation**: Runs both the undifferentiated baseline and the specialized agent against the full 20-sample benchmark corpus. The baseline stays untooled so the A/B comparison is honest about what specialization contributes. Computes precision, recall, F1, and specificity for each. The `ComparisonResult` computes deltas. Guard predicates decide the next transition. After scoring, every specialized verdict is replayed through the deterministic AST and pattern scanners — disagreements are logged as `DECISION` events so cross-check findings are auditable alongside metrics.
-
-The pipeline is not wired to a single domain. An eight-sample security-audit corpus lives alongside the main one, and an integration test differentiates against both: the security specialisation ends up with a strictly narrower capability set and visibly security-flavoured prompt language, proving the architecture generalises beyond the `code_quality_analysis` label.
+The pipeline is not wired to a single domain. An eight-sample security-audit corpus lives alongside the main one, and an integration test differentiates against both: the security specialisation ends up with a strictly narrower capability set and visibly security-flavoured prompt language.
 
 ## 3. Evaluation & QA Strategy
 
 ### Benchmark Corpus
 
-The 20-sample corpus is designed to stress-test the agent across realistic scenarios:
-
 | Category | Count | Examples |
 |---|---|---|
-| Logic bugs | 5 | Off-by-one in binary search, wrong comparison operator, missing null check, integer overflow, boundary error |
-| Security vulnerabilities | 4 | SQL injection via f-string, path traversal, hardcoded credentials, eval() with user input |
+| Logic bugs | 5 | Off-by-one in binary search, wrong comparison operator, missing null check |
+| Security | 4 | SQL injection via f-string, path traversal, hardcoded credentials, `eval()` on user input |
 | Code smells | 4 | Deep nesting, god function, dead code after return, long parameter list |
-| Performance issues | 2 | N+1 queries in loop, unnecessary deep copy |
-| Clean code (adversarial) | 5 | Intentionally suspicious-looking but correct code — tests false positive resistance |
+| Performance | 2 | N+1 queries, unnecessary deep copy |
+| Clean (adversarial) | 5 | Intentionally suspicious-looking but correct code — tests false-positive resistance |
 
-The clean samples are the hardest. They include patterns that look like bugs to a naive reviewer (e.g., a function that uses `eval()` safely with `__builtins__={}`, or a comparison that looks off-by-one but is correct for the domain). This is where the F1 score matters: precision without recall is useless, and recall without precision floods developers with noise.
-
-### Metrics
-
-Evaluation uses category-level classification metrics:
-
-- **True positive**: Detected category exists in ground truth
-- **False positive**: Detected category does not exist in ground truth (or any detection on clean code)
-- **False negative**: Ground truth category not detected
-- **True negative**: Clean sample correctly identified as clean
-
-All metric properties handle division by zero (returning 0.0) — tested explicitly with all-zeros input.
+The clean samples are the hardest: they include code that uses `eval()` safely with `__builtins__={}`, or a comparison that looks off-by-one but is correct for the domain. Precision without recall is useless; recall without precision floods developers with noise — F1 is what matters.
 
 ### Rollback Diagnosis — a Closed Feedback Loop
 
-When validation fails, `diagnose_failure()` analyzes *what specifically went wrong* from two signals: the benchmark comparison, and the cross-check disagreements the validation phase already collected.
+When validation fails, `diagnose_failure()` reads two signals: the benchmark comparison (precision/recall/specificity/F1 deltas produce generic nudges) and the cross-check disagreements the validation phase already collected. The cross-check is what makes this a real feedback loop rather than a score gate: `N` samples where the LLM flagged structure on short, shallow code become "do not flag structure unless a function exceeds ~20 lines or depth exceeds 2"; `N` samples where the pattern scanner caught `eval()` / hardcoded credentials / SQL concat / `pickle.loads` that the LLM missed become "scan harder for …" with the exact patterns named.
 
-From the metrics:
-- Precision dropped → "Reduce false positive rate"
-- Recall dropped → "Improve issue detection thoroughness"
-- Specificity dropped → "Improve clean code recognition"
-- F1 did not improve → "Simplify prompt to reduce confusion"
-
-From the cross-check (the part that makes this a real feedback loop rather than a score gate):
-- N samples where the LLM flagged a structure problem on short, shallow code → "Be conservative on structural issues — do not flag structure unless a function exceeds ~20 lines or nesting depth exceeds 2."
-- N samples where the pattern scanner caught `eval()` / hardcoded credentials / `shell=True` / SQL string concat / `pickle.loads` that the LLM missed → "Scan harder for security patterns …" with the exact patterns named.
-
-These adjustments are injected into the next specialization attempt as extra prompt guidance, and every step of the loop is visible in the journal: the cross-check disagreement lands as a `DECISION`, the derived adjustment lands as a `ROLLBACK_REASON`, and the re-composed prompt's delta lands as a coloured diff summary — also a `DECISION`. The agent's next attempt is shaped by where it actually got things wrong, not just by how far its F1 fell short.
-
-![Closed feedback loop on rollback](diagrams/feedback_loop.svg)
-
-*Rendered from `docs/diagrams/feedback_loop.puml`.*
+Every step of the loop is visible in the journal: the disagreement lands as a `DECISION`, the derived adjustment as a `ROLLBACK_REASON`, and the re-composed prompt's delta as a coloured-diff summary — also a `DECISION`. The next attempt is shaped by where the last one actually went wrong, not just by how far its F1 fell short.
 
 ### Test Suite
 
-117 tests, organized by concern:
-
-| Module | Tests | What it covers |
-|---|---|---|
-| `test_state_machine.py` | 26 | Valid/invalid transitions, guard predicates, rollback budget, reset, state accessors |
-| `test_state_machine_properties.py` | 5 | Hypothesis property tests — invariants over random transition sequences |
-| `test_journal.py` | 18 | Append-only semantics, serialization round-trip, LLM call metadata, token totals, filtering |
-| `test_metrics.py` | 15 | Perfect detection, zero detection, all false positives, all zeros, balanced F1, `compute_metrics` aggregation |
-| `test_phases.py` | 29 | Each phase in isolation: sensing/planning/specialization/validation, `diagnose_failure` (metric- and cross-check-driven), AST cross-check |
-| `test_openai_adapter.py` | 6 | Retry on transient errors, exhaustion, non-retryable propagation, timeout wiring |
-| `test_integration.py` | 18 | Full pipeline, rollback mechanism, closed-loop cross-check feedback, prompt diff logging, journal persistence, multi-domain specialization |
-
-**Test philosophy**: `FakeLLM` is a first-class test double with realistic canned responses for all 20 benchmark samples. Tests run in under a second with zero network calls. The `poor_fake_llm` fixture returns deliberately degraded responses to trigger rollback — testing the failure path as rigorously as the happy path. Hypothesis property tests on the state machine search two hundred random transition sequences per property for counter-examples to invariants I care about (monotonic rollback count, FAILED-is-terminal, etc.), so the proof is not limited to the cases I happened to imagine.
+142 tests, under a second, zero network. Hypothesis property tests search 200 random transition sequences per invariant (rollback monotonicity, `FAILED`-is-terminal). `FakeLLM` is a first-class test double with canned responses for all 20 samples; `poor_fake_llm` returns deliberately degraded answers to exercise the failure path as rigorously as the happy path.
 
 ### 3.5 Results from a Live Run
 
 A real run against the OpenAI API (captured in `docs/example_run/journal.json`):
 
-| | Baseline (undifferentiated) | Specialized | Δ |
+| | Baseline | Specialized | Δ |
 |---|---:|---:|---:|
 | Precision | 0.000 | 0.667 | +0.667 |
 | Recall | 0.000 | 0.933 | +0.933 |
 | F1 | 0.000 | 0.778 | +0.778 |
 | Specificity | 0.000 | 0.300 | +0.300 |
 
-Forty-two LLM calls (gpt-4o-mini for sensing/planning/baseline, gpt-4o for the specialized pass), forty-one thousand total tokens, no rollbacks, roughly twenty cents at current OpenAI pricing. The baseline zero is honest rather than flattering — the undifferentiated prompt does not ask for structured JSON, so the parser returns no categories on every sample. That is exactly the gap the pipeline exists to close. The cross-check layer also fired on this run, flagging two over-flags on structure and one `eval()` call the LLM missed, all logged as `DECISION` events.
+Forty-two LLM calls (gpt-4o-mini for sensing/planning/baseline, gpt-4o for the specialized pass), forty-one thousand total tokens, no rollbacks, roughly twenty cents. The cross-check fired on this run too, flagging two structure over-flags and one `eval()` the LLM missed — all logged as `DECISION` events.
 
 ### 3.6 What surprised me, what failed
 
 **The baseline F1 of 0.00 is a parser artefact, not a triumph.** The undifferentiated prompt never asks for structured JSON, so the parser returns no categories on every sample. Part of the specialization delta is bought by asking for JSON at all, not by deeper reasoning. I considered nudging the baseline toward JSON to make the comparison "fairer," but the honest framing is that output-structure discipline is part of what specialization wins, and the numbers should say so.
 
-**Cross-check disagreements started life as a score input.** The first design penalized F1 when the LLM disagreed with the AST or the pattern scanner. That made validation stricter but taught the next attempt nothing. Feeding the disagreements back as prompt guidance — "N over-flags on short functions; N `eval()` calls the scanner caught" — is what actually closes the loop. That reframing took the longest.
+**Cross-check disagreements started life as a score input.** The first design penalized F1 when the LLM disagreed with the AST or the pattern scanner. That made validation stricter but taught the next attempt nothing. Feeding the disagreements back as prompt guidance is what actually closes the loop. That reframing took the longest.
 
 **FakeLLM substring routing is brittle.** When I drifted a prompt phrase during development the test double silently stopped matching, integration tests flipped to the default clean response, and the failure looked like a regression in the specialized agent. Renaming a prompt now means re-auditing the keys in `conftest.py`.
 
@@ -144,24 +77,10 @@ Forty-two LLM calls (gpt-4o-mini for sensing/planning/baseline, gpt-4o for the s
 
 ## 4. Trade-offs & Extensions
 
-### Trade-offs Made
+**Single-LLM evaluation.** Both baseline and specialized agents use the same LLM family. This is a fair A/B of prompt engineering, but does not test whether a weaker model with a better prompt can match a stronger one.
 
-**Single-LLM evaluation.** Both baseline and specialized agents use the same LLM (via different prompts). This is a fair A/B test of prompt engineering effectiveness, but does not test whether a weaker model + better prompt can match a stronger model. A production system would cross-evaluate models.
+**Static benchmark corpus.** Twenty handcrafted samples keep tests deterministic and fast but can't capture the full distribution of real-world code.
 
-**Static benchmark corpus.** The 20 samples are handcrafted fixtures. This makes tests deterministic and fast, but the corpus may not capture the full distribution of real-world code. Extension: generate additional samples programmatically or pull from open-source repositories with known CVEs.
+**Synchronous execution.** Acceptable at 20 samples; scaling to hundreds would want `asyncio.gather()` with a rate-limiting semaphore. `ReviewFunction` would become `AsyncReviewFunction` — the architecture already supports this.
 
-**Synchronous execution.** Each benchmark sample is reviewed sequentially. For a 20-sample corpus this is acceptable, but scaling to hundreds of samples would benefit from async execution with rate limiting.
-
-**Category granularity.** The normalization layer maps to 4 canonical categories (logic, security, structure, performance). Some issues span categories (e.g., a security bug caused by a logic error). The current model counts this as TP for the detected category and ignores cross-category relationships.
-
-### What I Would Add Next
-
-1. **Async benchmark runner.** Replace the synchronous loop in `run_benchmark` with `asyncio.gather()` and semaphore-based rate limiting. The architecture already supports this — `ReviewFunction` would become `AsyncReviewFunction`.
-
-2. **Multi-model evaluation.** The `LLMPort` protocol already supports model overrides. Wire the validation phase to test the same prompt against multiple models and select the best model-prompt pair, not just the best prompt.
-
-3. **Continuous corpus expansion.** Add a feedback loop: when the specialized agent reviews real code and a human corrects the review, the correction becomes a new benchmark sample. The corpus grows with production usage.
-
-4. **Capability discovery.** Currently capabilities are predefined in the registry. An extension would let the planning phase *propose* new capabilities that don't exist yet, and have the specialization phase generate their prompt fragments dynamically.
-
-5. **Token-budget guard.** The journal already totals tokens per run; an obvious next step is a state-machine guard that rolls back or fails if a run would exceed a configured budget, matching the F1 and improvement guards in spirit.
+**Would add next.** (1) *Multi-model evaluation* — the `LLMPort` already supports overrides; wire validation to pick the best model-prompt pair, not just the best prompt. (2) *Token-budget guard* — the journal already totals tokens; a state-machine guard that rolls back or fails on budget overrun would match the F1 and improvement guards in spirit.
