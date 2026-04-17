@@ -181,6 +181,76 @@ def _make_planning_response() -> dict[str, Any]:
     }
 
 
+def _make_security_sensing_response() -> dict[str, Any]:
+    """Sensing response scoped to security-audit work."""
+    return {
+        "domain_name": "security_audit",
+        "review_strategies": [
+            "Threat-model the code path before reading line by line",
+            "Trace every sink for tainted input back to its source",
+            "Treat any string-building SQL or shell command as hostile",
+        ],
+        "issue_taxonomy": {
+            "security": [
+                "SQL injection",
+                "path traversal",
+                "command injection",
+                "hardcoded credentials",
+                "insecure deserialization",
+                "weak cryptography",
+            ],
+        },
+        "tool_categories": [
+            "Regex pattern matching for known unsafe constructs",
+            "Taint analysis for sink/source tracking",
+        ],
+        "output_format_patterns": [
+            "Structured JSON with severity, category, line number, exploit sketch, remediation",
+        ],
+        "key_insights": [
+            "Most false positives come from whitelisted sinks that look unsafe at a glance",
+            "A clean code sample may use eval/subprocess safely if the inputs are constrained",
+        ],
+    }
+
+
+def _make_security_planning_response() -> dict[str, Any]:
+    """Narrower planning response: only security + severity ranking."""
+    return {
+        "selected_capabilities": [
+            "security_analysis",
+            "severity_ranking",
+        ],
+        "review_passes": [
+            {
+                "pass_name": "security",
+                "focus_area": "Security vulnerabilities and unsafe sinks",
+                "capability_name": "security_analysis",
+                "priority": 1,
+            },
+            {
+                "pass_name": "severity",
+                "focus_area": "Rank findings by exploitability",
+                "capability_name": "severity_ranking",
+                "priority": 2,
+            },
+        ],
+        "evaluation_criteria": {
+            "f1_threshold": 0.5,
+            "precision_min": 0.5,
+            "recall_min": 0.5,
+        },
+        "domain_insights_for_prompt": (
+            "Focus exclusively on security: trace untrusted input to every sink. "
+            "Do not flag style or structural issues — they are out of scope for an audit."
+        ),
+        "reasoning": (
+            "A security audit benefits from a narrow, deep focus rather than a broad "
+            "multi-pass review; omitting structural and style passes reduces false positives."
+        ),
+    }
+
+
 def _make_review_response_with_issues() -> str:
     """Realistic review response detecting issues."""
     return json.dumps(
@@ -422,6 +492,10 @@ def fake_llm() -> FakeLLM:
             "find_connected_components": _make_review_response_clean(),
         },
         structured_responses={
+            # More-specific security_audit keys come first so substring matching
+            # short-circuits before hitting the generic code-quality responses.
+            "domain of security_audit": _make_security_sensing_response(),
+            "specialization for security_audit": _make_security_planning_response(),
             "understand the domain": _make_sensing_response(),
             "plan its specialization": _make_planning_response(),
             "default": _make_sensing_response(),

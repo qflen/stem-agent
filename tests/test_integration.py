@@ -181,6 +181,54 @@ class TestJournalPersistence:
             assert orig.phase == rest.phase
 
 
+class TestMultiDomainSpecialization:
+    """Proving the pipeline isn't hard-wired to code_quality_analysis."""
+
+    def test_multi_domain_specialization(self, fake_llm: FakeLLM) -> None:
+        """Differentiate for two distinct domains and assert the specialisations differ.
+
+        The FakeLLM returns a broad six-capability plan for
+        ``code_quality_analysis`` and a narrower two-capability
+        (security + severity) plan for ``security_audit``. The agents
+        should end up with visibly different prompts and capability sets.
+
+        This test asserts architectural generalisation, not benchmark
+        quality — the thresholds are pinned low so FakeLLM's generic
+        review responses don't gate the assertion we actually care about.
+        """
+        from stem_agent.evaluation.fixtures.security_audit_samples import (
+            get_security_audit_corpus,
+        )
+
+        permissive = StemAgentConfig(
+            openai_api_key="test-key",
+            f1_threshold=0.0,
+            improvement_required=False,
+            max_rollback_attempts=1,
+        )
+
+        cq_agent = StemAgent(config=permissive, llm=fake_llm, corpus=get_benchmark_corpus())
+        assert cq_agent.differentiate(domain="code_quality_analysis") is True
+        cq_config = cq_agent.agent_config
+        assert cq_config is not None
+
+        sec_agent = StemAgent(config=permissive, llm=fake_llm, corpus=get_security_audit_corpus())
+        assert sec_agent.differentiate(domain="security_audit") is True
+        sec_config = sec_agent.agent_config
+        assert sec_config is not None
+
+        # Security specialisation is strictly narrower than code-quality.
+        assert set(sec_config.capabilities) < set(cq_config.capabilities)
+        assert "security_analysis" in sec_config.capabilities
+        assert "structural_analysis" not in sec_config.capabilities
+        assert "performance_analysis" not in sec_config.capabilities
+
+        # And the composed prompts pick up different domain-specific language.
+        assert "security" in sec_config.system_prompt.lower()
+        assert "out of scope" in sec_config.system_prompt.lower()
+        assert sec_config.system_prompt != cq_config.system_prompt
+
+
 class TestBenchmarkCorpus:
     """The benchmark corpus itself is well-formed."""
 
