@@ -423,3 +423,61 @@ class TestDiagnoseFailure:
         rollback_events = journal.get_events_by_type(EventType.ROLLBACK_REASON)
         assert len(rollback_events) == 1
         assert rollback_events[0].data["adjustments"]
+
+    def test_structure_over_flags_produce_targeted_adjustment(
+        self, journal: EvolutionJournal
+    ) -> None:
+        """N structure-over-flags should yield one adjustment mentioning the count."""
+        context = {
+            "comparison": ComparisonResult(
+                baseline=ClassificationMetrics(5, 0, 0, 5),
+                specialized=ClassificationMetrics(5, 0, 0, 5),  # same as baseline
+            ),
+            "cross_check_disagreements": [
+                {"kind": "llm_flagged_structure_but_ast_clean", "sample_id": f"s{i}"}
+                for i in range(3)
+            ],
+        }
+        adjustments = diagnose_failure(context, journal)
+        hits = [a for a in adjustments if "structural issues" in a.lower()]
+        assert len(hits) == 1
+        assert "3 sample" in hits[0]
+
+    def test_security_misses_name_the_patterns(self, journal: EvolutionJournal) -> None:
+        """Scanner-caught patterns should show up verbatim in the adjustment."""
+        context = {
+            "comparison": ComparisonResult(
+                baseline=ClassificationMetrics(5, 0, 0, 5),
+                specialized=ClassificationMetrics(5, 0, 0, 5),
+            ),
+            "cross_check_disagreements": [
+                {
+                    "kind": "scanner_found_security_pattern_llm_missed",
+                    "sample_id": "sec_01",
+                    "detail": "Use of eval() — potential code injection",
+                },
+                {
+                    "kind": "scanner_found_security_pattern_llm_missed",
+                    "sample_id": "sec_02",
+                    "detail": "Hardcoded credential-like string",
+                },
+            ],
+        }
+        adjustments = diagnose_failure(context, journal)
+        security_adj = next(a for a in adjustments if "security patterns" in a.lower())
+        assert "eval()" in security_adj
+        assert "Hardcoded credential" in security_adj
+        assert "2 case" in security_adj
+
+    def test_no_disagreements_no_cross_check_adjustments(self, journal: EvolutionJournal) -> None:
+        """Empty cross-check results must not add boilerplate noise."""
+        context = {
+            "comparison": ComparisonResult(
+                baseline=ClassificationMetrics(5, 1, 3, 2),
+                specialized=ClassificationMetrics(4, 5, 1, 3),
+            ),
+            "cross_check_disagreements": [],
+        }
+        adjustments = diagnose_failure(context, journal)
+        assert not any("structural issues" in a.lower() for a in adjustments)
+        assert not any("security patterns" in a.lower() for a in adjustments)

@@ -123,6 +123,51 @@ class TestRollbackMechanism:
         assert success is False
         assert agent.state == AgentState.FAILED
 
+    def test_cross_check_adjustments_flow_into_next_attempt(self, poor_fake_llm: FakeLLM) -> None:
+        """When cross-check finds disagreements, the rollback adjustments derived
+        from them should be (a) logged as ROLLBACK_REASON adjustments, and (b)
+        picked up by the next specialization attempt as an 'Applying N rollback
+        adjustments' DECISION event. This is the closed feedback loop."""
+        config = StemAgentConfig(
+            openai_api_key="test-key",
+            f1_threshold=0.95,
+            improvement_required=True,
+            max_rollback_attempts=2,
+        )
+        corpus = get_benchmark_corpus()
+        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent.differentiate(domain="code_quality_analysis")
+
+        journal = agent.journal
+        rollback_events = journal.get_events_by_type(EventType.ROLLBACK_REASON)
+        if not rollback_events:
+            pytest.skip("poor_fake_llm did not trigger rollback in this config")
+
+        recorded_adjustments = [
+            adj for event in rollback_events for adj in event.data.get("adjustments", [])
+        ]
+        cross_check_sourced = [
+            a
+            for a in recorded_adjustments
+            if "structural issues" in a.lower() or "security patterns" in a.lower()
+        ]
+        if not cross_check_sourced:
+            pytest.skip("no cross-check disagreements on this run — nothing to feed back")
+
+        # The SpecializationPhase logs each application of rollback adjustments.
+        # Those DECISION events must carry the cross-check-derived text forward.
+        decisions = journal.get_events_by_type(EventType.DECISION)
+        application_events = [
+            d
+            for d in decisions
+            if "Applying" in d.data["decision"] and "adjustments" in d.data["decision"]
+        ]
+        assert application_events, (
+            "Expected at least one 'Applying N rollback adjustments' decision"
+        )
+        reasoning = " ".join(d.data["reasoning"] for d in application_events).lower()
+        assert "structural issues" in reasoning or "security patterns" in reasoning
+
     def test_prompt_diff_logged_after_rollback(self, poor_fake_llm: FakeLLM) -> None:
         """After at least one rollback, the journal carries a diff-summary decision.
 

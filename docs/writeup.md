@@ -6,7 +6,7 @@
 
 **Approach.** I modeled the agent lifecycle as a biological differentiation process. A stem agent begins undifferentiated, senses its domain through an LLM, plans a multi-pass review architecture, assembles a specialized prompt from composable fragments, validates performance against a 20-sample benchmark corpus, and either graduates to SPECIALIZED or rolls back with diagnostic adjustments. A state machine with guard predicates enforces that transitions only happen when quantitative criteria are met — this is not decorative.
 
-**Architecture choice: Hexagonal (Ports & Adapters).** The core logic depends on protocols (`LLMPort`, `StoragePort`), not concrete implementations. This is critical for two reasons: (1) the test suite runs 113 tests in under a second using a `FakeLLM` that never touches a network, and (2) swapping from OpenAI to any other provider requires implementing two methods — no core changes.
+**Architecture choice: Hexagonal (Ports & Adapters).** The core logic depends on protocols (`LLMPort`, `StoragePort`), not concrete implementations. This is critical for two reasons: (1) the test suite runs 117 tests in under a second using a `FakeLLM` that never touches a network, and (2) swapping from OpenAI to any other provider requires implementing two methods — no core changes.
 
 ```mermaid
 stateDiagram-v2
@@ -91,6 +91,7 @@ graph TB
 | **Category normalization** | LLMs produce varied category names ("sql_injection", "vulnerability", "security_vulnerability"). A normalization layer maps all variants to 4 canonical categories. |
 | **FakeLLM as first-class test double** | Not a mock — a deterministic response engine with substring-matched routing and call tracking. It models realistic LLM behavior for all 20 benchmark samples. |
 | **Deterministic cross-check after validation** | Every specialized verdict is replayed through AST-based `analyze_structure` and regex-based `scan_patterns`. Disagreements land in the journal as `DECISION` events, so over-flags and misses are visible instead of hidden. |
+| **Closed-loop rollback diagnosis** | `diagnose_failure` reads both the benchmark metrics *and* the cross-check disagreements. N structure over-flags turn into "be conservative on structural issues (N samples)"; N security misses turn into "scan harder for: `eval()`, hardcoded credentials, …". The next specialization attempt is steered by where the last one actually went wrong, not only by how far its F1 fell short. |
 | **Prompt diff across rollback** | When specialization runs twice, the orchestrator renders a coloured unified diff between the before- and after-prompts and logs a one-line summary. Rollback stops being a black box. |
 | **Retry + timeout at the adapter boundary** | Four-attempt exponential backoff (1s→8s) on `RateLimitError`, `APITimeoutError`, `APIConnectionError`, plus a configurable `request_timeout`. Core and phase code stay ignorant of the network. |
 
@@ -140,19 +141,25 @@ Evaluation uses category-level classification metrics:
 
 All metric properties handle division by zero (returning 0.0) — tested explicitly with all-zeros input.
 
-### Rollback Diagnosis
+### Rollback Diagnosis — a Closed Feedback Loop
 
-When validation fails, `diagnose_failure()` analyzes *what specifically went wrong*:
+When validation fails, `diagnose_failure()` analyzes *what specifically went wrong* from two signals: the benchmark comparison, and the cross-check disagreements the validation phase already collected.
+
+From the metrics:
 - Precision dropped → "Reduce false positive rate"
 - Recall dropped → "Improve issue detection thoroughness"
 - Specificity dropped → "Improve clean code recognition"
 - F1 did not improve → "Simplify prompt to reduce confusion"
 
-These adjustments feed back into the next specialization attempt as extra prompt guidance.
+From the cross-check (the part that makes this a real feedback loop rather than a score gate):
+- N samples where the LLM flagged a structure problem on short, shallow code → "Be conservative on structural issues — do not flag structure unless a function exceeds ~20 lines or nesting depth exceeds 2."
+- N samples where the pattern scanner caught `eval()` / hardcoded credentials / `shell=True` / SQL string concat / `pickle.loads` that the LLM missed → "Scan harder for security patterns …" with the exact patterns named.
+
+These adjustments are injected into the next specialization attempt as extra prompt guidance, and every step of the loop is visible in the journal: the cross-check disagreement lands as a `DECISION`, the derived adjustment lands as a `ROLLBACK_REASON`, and the re-composed prompt's delta lands as a coloured diff summary — also a `DECISION`. The agent's next attempt is shaped by where it actually got things wrong, not just by how far its F1 fell short.
 
 ### Test Suite
 
-113 tests, organized by concern:
+117 tests, organized by concern:
 
 | Module | Tests | What it covers |
 |---|---|---|
@@ -160,9 +167,9 @@ These adjustments feed back into the next specialization attempt as extra prompt
 | `test_state_machine_properties.py` | 5 | Hypothesis property tests — invariants over random transition sequences |
 | `test_journal.py` | 18 | Append-only semantics, serialization round-trip, LLM call metadata, token totals, filtering |
 | `test_metrics.py` | 15 | Perfect detection, zero detection, all false positives, all zeros, balanced F1, `compute_metrics` aggregation |
-| `test_phases.py` | 26 | Each phase in isolation: sensing/planning/specialization/validation, plus `diagnose_failure` and AST cross-check |
+| `test_phases.py` | 29 | Each phase in isolation: sensing/planning/specialization/validation, `diagnose_failure` (metric- and cross-check-driven), AST cross-check |
 | `test_openai_adapter.py` | 6 | Retry on transient errors, exhaustion, non-retryable propagation, timeout wiring |
-| `test_integration.py` | 17 | Full pipeline, rollback mechanism, prompt diff logging, journal persistence, multi-domain specialization |
+| `test_integration.py` | 18 | Full pipeline, rollback mechanism, closed-loop cross-check feedback, prompt diff logging, journal persistence, multi-domain specialization |
 
 **Test philosophy**: `FakeLLM` is a first-class test double with realistic canned responses for all 20 benchmark samples. Tests run in under a second with zero network calls. The `poor_fake_llm` fixture returns deliberately degraded responses to trigger rollback — testing the failure path as rigorously as the happy path. Hypothesis property tests on the state machine search two hundred random transition sequences per property for counter-examples to invariants I care about (monotonic rollback count, FAILED-is-terminal, etc.), so the proof is not limited to the cases I happened to imagine.
 

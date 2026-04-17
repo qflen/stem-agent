@@ -269,8 +269,15 @@ def diagnose_failure(
 ) -> list[str]:
     """Analyze validation failure and suggest adjustments for rollback.
 
-    Reads the validation results and comparison to determine what went wrong
-    and how the specialization plan should be adjusted.
+    Reads the validation results, the benchmark comparison, and any
+    cross-check disagreements surfaced by ``cross_check_verdicts`` to
+    decide what specifically went wrong and how the next specialization
+    attempt should be steered.
+
+    The cross-check signal is what makes this more than a threshold
+    check: when the AST or pattern scanner disagreed with the LLM, the
+    rollback adjustment names the failure mode directly instead of
+    falling back to a generic "improve recall" nudge.
 
     Returns:
         List of adjustment strings to apply on the next specialization attempt.
@@ -278,7 +285,6 @@ def diagnose_failure(
     comparison: ComparisonResult = context["comparison"]
     adjustments: list[str] = []
 
-    # Check what specifically failed
     if comparison.specialized.precision < comparison.baseline.precision:
         adjustments.append(
             "Reduce false positive rate — add instruction to only flag issues "
@@ -303,6 +309,8 @@ def diagnose_failure(
             "to reduce confusion and focus on the most impactful review passes"
         )
 
+    adjustments.extend(_adjustments_from_cross_check(context))
+
     if not adjustments:
         adjustments.append(
             "Metrics below threshold but no specific degradation pattern identified — "
@@ -315,5 +323,49 @@ def diagnose_failure(
         f"delta={comparison.f1_delta:+.3f}"
     )
     journal.log_rollback_reason(reason=reason, adjustments=adjustments)
+
+    return adjustments
+
+
+def _adjustments_from_cross_check(context: dict[str, Any]) -> list[str]:
+    """Turn cross-check disagreements into targeted prompt adjustments.
+
+    The validation phase already records every disagreement between the
+    LLM and the deterministic checks; here we read them back and produce
+    one adjustment per failure mode, quantified by how many samples
+    tripped it. This is the closed loop — the agent's next attempt is
+    shaped by where it actually got things wrong.
+    """
+    disagreements: list[dict[str, Any]] = context.get("cross_check_disagreements") or []
+    if not disagreements:
+        return []
+
+    structure_over_flags = [
+        d for d in disagreements if d.get("kind") == "llm_flagged_structure_but_ast_clean"
+    ]
+    security_misses = [
+        d for d in disagreements if d.get("kind") == "scanner_found_security_pattern_llm_missed"
+    ]
+
+    adjustments: list[str] = []
+
+    if structure_over_flags:
+        count = len(structure_over_flags)
+        adjustments.append(
+            f"Be conservative on structural issues: the AST cross-check disagreed on "
+            f"{count} sample(s) where a short, shallow function was flagged. Do not "
+            f"report structural problems unless a function exceeds ~20 lines or "
+            f"nesting depth exceeds 2."
+        )
+
+    if security_misses:
+        details = sorted({d.get("detail", "") for d in security_misses if d.get("detail")})
+        joined = "; ".join(details) if details else "patterns the scanner caught"
+        adjustments.append(
+            f"Scan harder for security patterns: the pattern scanner caught "
+            f"{len(security_misses)} case(s) the LLM missed ({joined}). Always flag "
+            f"eval/exec on user input, hardcoded credentials, shell=True with string "
+            f"formatting, SQL string concatenation, and pickle.loads of untrusted data."
+        )
 
     return adjustments
