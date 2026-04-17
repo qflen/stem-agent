@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from stem_agent.capabilities.tools import analyze_structure, scan_patterns
 from stem_agent.core.journal import EvolutionJournal
 from stem_agent.evaluation.benchmark import (
     ReviewFunction,
+    SampleVerdict,
     make_llm_review_fn,
     run_benchmark,
 )
@@ -19,6 +21,11 @@ from stem_agent.evaluation.comparator import ComparisonResult
 from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample
 from stem_agent.phases.specialization import SpecializedAgentConfig
 from stem_agent.ports.llm import LLMPort
+
+# Heuristic thresholds for the structure cross-check: code that is this
+# short and shallow shouldn't be tagged as a structural problem.
+_STRUCTURE_SHORT_FN_LIMIT = 20
+_STRUCTURE_SHALLOW_DEPTH_LIMIT = 2
 
 
 class ValidationPhase:
@@ -141,6 +148,18 @@ class ValidationPhase:
             result=comparison.summary(),
         )
 
+        # Cross-check specialized verdicts against deterministic static analysis.
+        # This catches two common LLM failure modes: calling clean code ugly, and
+        # missing a hardcoded-credential / eval / SQL-injection pattern that a
+        # regex will catch every time.
+        from stem_agent.evaluation.fixtures.code_samples import get_benchmark_corpus
+
+        corpus_for_cross_check = self._corpus or get_benchmark_corpus()
+        disagreements = cross_check_verdicts(
+            specialized_verdicts, corpus_for_cross_check, journal, phase=self.name
+        )
+        context["cross_check_disagreements"] = disagreements
+
         context["validation_result"] = {
             "baseline_verdicts": [
                 {
@@ -167,6 +186,81 @@ class ValidationPhase:
         context["baseline_f1"] = baseline_metrics.f1
         context["specialized_f1"] = specialized_metrics.f1
         return context
+
+
+def cross_check_verdicts(
+    verdicts: list[SampleVerdict],
+    corpus: list[BenchmarkSample],
+    journal: EvolutionJournal,
+    *,
+    phase: str = "validation",
+) -> list[dict[str, Any]]:
+    """Reconcile LLM verdicts against AST metrics and regex patterns.
+
+    For each sample we check two narrow, high-signal cases:
+
+    * the LLM flagged a ``structure`` issue, but the code is a short,
+      shallow function — likely a false positive, so the reviewer
+      should discount that category for that sample;
+    * the pattern scanner found a security match (hardcoded secret,
+      ``eval``, SQL-string-concat) but the LLM did not flag
+      ``security`` — likely a false negative the regex caught.
+
+    Disagreements are recorded as ``DECISION`` events so they show up
+    in the audit trail next to the LLM call that produced the verdict.
+    """
+    corpus_by_id = {sample.sample_id: sample for sample in corpus}
+    disagreements: list[dict[str, Any]] = []
+
+    for verdict in verdicts:
+        sample = corpus_by_id.get(verdict.sample_id)
+        if sample is None:
+            continue
+
+        metrics = analyze_structure(sample.code)
+        if (
+            "structure" in verdict.detected_categories
+            and metrics is not None
+            and metrics.max_function_length <= _STRUCTURE_SHORT_FN_LIMIT
+            and metrics.max_nesting_depth <= _STRUCTURE_SHALLOW_DEPTH_LIMIT
+        ):
+            disagreement = {
+                "sample_id": verdict.sample_id,
+                "kind": "llm_flagged_structure_but_ast_clean",
+                "detail": (
+                    f"max_fn_length={metrics.max_function_length} "
+                    f"max_nesting_depth={metrics.max_nesting_depth}"
+                ),
+            }
+            disagreements.append(disagreement)
+            journal.log_decision(
+                phase=phase,
+                decision=(
+                    f"Cross-check disagreement on {verdict.sample_id}: "
+                    "LLM flagged structure but AST metrics look clean"
+                ),
+                reasoning=disagreement["detail"],
+            )
+
+        patterns = scan_patterns(sample.code)
+        if patterns and "security" not in verdict.detected_categories:
+            descriptions = [p.pattern_description for p in patterns]
+            disagreement = {
+                "sample_id": verdict.sample_id,
+                "kind": "scanner_found_security_pattern_llm_missed",
+                "detail": "; ".join(descriptions),
+            }
+            disagreements.append(disagreement)
+            journal.log_decision(
+                phase=phase,
+                decision=(
+                    f"Cross-check disagreement on {verdict.sample_id}: "
+                    "pattern scanner caught a security issue the LLM missed"
+                ),
+                reasoning=disagreement["detail"],
+            )
+
+    return disagreements
 
 
 def diagnose_failure(

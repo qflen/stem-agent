@@ -8,12 +8,18 @@ from __future__ import annotations
 
 from stem_agent.capabilities.registry import build_default_registry
 from stem_agent.core.journal import EventType, EvolutionJournal
+from stem_agent.evaluation.benchmark import SampleVerdict
 from stem_agent.evaluation.comparator import ComparisonResult
+from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample
 from stem_agent.evaluation.metrics import ClassificationMetrics
 from stem_agent.phases.planning import PlanningPhase, SpecializationPlan
 from stem_agent.phases.sensing import DomainKnowledge, SensingPhase
 from stem_agent.phases.specialization import SpecializationPhase, SpecializedAgentConfig
-from stem_agent.phases.validation import ValidationPhase, diagnose_failure
+from stem_agent.phases.validation import (
+    ValidationPhase,
+    cross_check_verdicts,
+    diagnose_failure,
+)
 from tests.conftest import FakeLLM
 
 
@@ -307,6 +313,66 @@ class TestValidationPhase:
         assert len(llm_calls) == 2 * len(small_corpus)
         assert all(isinstance(c.data["token_count"], int) for c in llm_calls)
         assert journal.total_tokens > 0
+
+
+class TestCrossCheckVerdicts:
+    """The deterministic static-analysis cross-check flags two narrow cases."""
+
+    def _verdict(self, sample_id: str, detected: list[str]) -> SampleVerdict:
+        return SampleVerdict(
+            sample_id=sample_id,
+            detected_categories=set(detected),
+            is_clean_detected=not detected,
+            ground_truth_categories=set(),
+            is_clean_truth=False,
+        )
+
+    def test_flags_structure_false_positive(self, journal: EvolutionJournal) -> None:
+        sample = BenchmarkSample(
+            sample_id="tiny",
+            description="tiny well-structured function",
+            code="def add(a: int, b: int) -> int:\n    return a + b\n",
+            issue_categories=[],
+            is_clean=True,
+        )
+        verdict = self._verdict("tiny", ["structure"])
+        disagreements = cross_check_verdicts([verdict], [sample], journal)
+
+        assert len(disagreements) == 1
+        assert disagreements[0]["kind"] == "llm_flagged_structure_but_ast_clean"
+        decisions = journal.get_events_by_type(EventType.DECISION)
+        assert any("tiny" in d.data["decision"] for d in decisions)
+
+    def test_flags_missed_security_pattern(self, journal: EvolutionJournal) -> None:
+        sample = BenchmarkSample(
+            sample_id="hardcoded",
+            description="hardcoded key",
+            code='API_KEY = "sk-abc123"\n',
+            issue_categories=["security"],
+        )
+        verdict = self._verdict("hardcoded", ["structure"])  # LLM missed security
+        disagreements = cross_check_verdicts([verdict], [sample], journal)
+
+        kinds = {d["kind"] for d in disagreements}
+        assert "scanner_found_security_pattern_llm_missed" in kinds
+
+    def test_agreement_produces_no_disagreements(self, journal: EvolutionJournal) -> None:
+        sample = BenchmarkSample(
+            sample_id="clean",
+            description="clean code",
+            code="def greet(name: str) -> str:\n    return f'Hello, {name}!'\n",
+            issue_categories=[],
+            is_clean=True,
+        )
+        verdict = self._verdict("clean", [])  # LLM says clean — matches
+        disagreements = cross_check_verdicts([verdict], [sample], journal)
+
+        assert disagreements == []
+
+    def test_unknown_sample_id_is_skipped(self, journal: EvolutionJournal) -> None:
+        verdict = self._verdict("missing", ["structure"])
+        disagreements = cross_check_verdicts([verdict], [], journal)
+        assert disagreements == []
 
 
 class TestDiagnoseFailure:
