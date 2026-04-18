@@ -6,9 +6,7 @@ A self-specializing AI agent that evolves from an undifferentiated core into a t
 
 Full writeup: [`docs/writeup.pdf`](docs/writeup.pdf) (4 pages).
 
-<video src="docs/demo.mp4" controls width="800" muted>
-Your browser does not support the video tag. <a href="docs/demo.mp4">Download the demo</a>.
-</video>
+https://github.com/user-attachments/assets/2da6098c-45eb-47ce-b338-03519fb83a08
 
 The clip above replays a recorded run from `docs/example_run/journal.json` (no live API calls) and lands on the headline numbers: baseline F1 `0.000` → specialized F1 `0.778` on the 20-sample benchmark. Pausable; 15 seconds.
 
