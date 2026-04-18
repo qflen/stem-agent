@@ -2,13 +2,15 @@
 
 [![CI](https://github.com/qflen/stem-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/qflen/stem-agent/actions/workflows/ci.yml)
 
-A self-specializing AI agent that differentiates from an undifferentiated core into a task-specific specialist through guided differentiation.
+A self-specializing AI agent that evolves from an undifferentiated core into a task-specific specialist through guided differentiation.
+
+Full writeup: [`docs/writeup.pdf`](docs/writeup.pdf) (4 pages).
 
 <video src="docs/demo.mp4" controls width="800" muted>
 Your browser does not support the video tag. <a href="docs/demo.mp4">Download the demo</a>.
 </video>
 
-The clip above replays a recorded run from `docs/example_run/journal.json` — no live API calls — and lands on the headline numbers: baseline F1 `0.000` → specialized F1 `0.778` on the 20-sample benchmark. Pausable; 15 seconds.
+The clip above replays a recorded run from `docs/example_run/journal.json` (no live API calls) and lands on the headline numbers: baseline F1 `0.000` → specialized F1 `0.778` on the 20-sample benchmark. Pausable; 15 seconds.
 
 ## Quick Start
 
@@ -21,7 +23,7 @@ The clip above replays a recorded run from `docs/example_run/journal.json` — n
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/qflen/stem-agent.git
 cd stem-agent
 
 # Create virtual environment and install
@@ -83,11 +85,10 @@ make eval
 The stem agent follows a biological differentiation metaphor:
 
 ```
-UNDIFFERENTIATED → SENSING → DIFFERENTIATING → VALIDATING ─┐
-     ↑                                          │           │
-     └──────────── ROLLBACK ◄───────────────────┘           │
-                                                            ▼
-                                                       SPECIALIZED → EXECUTING
+UNDIFFERENTIATED → SENSING → DIFFERENTIATING → VALIDATING → SPECIALIZED → EXECUTING
+                                    ▲              │
+                                    │              │
+                                    └── ROLLBACK ──┘
 ```
 
 ### Phases
@@ -97,13 +98,6 @@ UNDIFFERENTIATED → SENSING → DIFFERENTIATING → VALIDATING ─┐
 3. **Specialization**: Assembles the specialized agent from prompt fragments and tools
 4. **Validation**: Benchmarks against a ground-truth corpus with regression gates
 5. **Execution**: The specialized agent reviews code
-
-### Key Design Decisions
-
-- **Ports & Adapters**: Core depends on protocols, not concrete implementations
-- **Guard predicates on transitions**: State machine enforces quantitative criteria
-- **Evolution journal**: Append-only event log — the agent's self-model
-- **Rollback with diagnosis**: Failed validation triggers adaptive re-specialization
 
 ## Project Structure
 
@@ -126,4 +120,6 @@ The benchmark corpus contains 20 Python code samples with ground-truth labels:
 - 2 performance issues (N+1 queries, unnecessary copies)
 - 5 clean code samples (adversarial true negatives that look suspicious but are correct)
 
-Metrics: precision, recall, F1, specificity — compared before/after specialization.
+Precision, recall, F1, and specificity, measured before and after specialization on the same corpus.
+
+142 deterministic tests, no network.
