@@ -1,5 +1,4 @@
 @startuml state_machine
-title Stem Agent — Lifecycle States and Transitions
 
 skinparam state {
   BackgroundColor #F5F7FA
