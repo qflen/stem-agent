@@ -1,4 +1,4 @@
-"""Tests for the evolution journal — append-only event log.
+"""Tests for the evolution journal; append-only event log.
 
 Validates: append-only semantics, serialization round-trips,
 and correct metadata capture on LLM calls.

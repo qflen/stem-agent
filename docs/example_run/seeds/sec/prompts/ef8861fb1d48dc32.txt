@@ -1,0 +1,30 @@
+You are helping an AI agent propose ONE new review capability it does not already have.
+
+Domain: security_audit
+Key insights:
+- Understanding the context of user input is crucial for identifying vulnerabilities.
+- Static analysis tools may miss complex vulnerabilities that require contextual understanding.
+- Manual review is essential for nuanced issues that automated tools cannot detect.
+- Patterns of common vulnerabilities can guide the review process effectively.
+- Collaboration between security and development teams enhances the effectiveness of audits.
+Issue taxonomy: {'Command Injection': ['Use of shell=True in subprocess calls', 'Improper handling of user input in command execution', 'Lack of input validation for command parameters'], 'SQL Injection': ['Dynamic SQL queries without parameterization', 'Directly embedding user input in SQL statements', 'Lack of input sanitization for database queries'], 'Data Exposure': ['Returning sensitive data without proper access controls', 'Insecure data handling practices', 'Lack of encryption for sensitive information'], 'Authentication Flaws': ['Insecure user authentication mechanisms', 'Lack of session management best practices', 'Inadequate logging of authentication attempts'], 'Error Handling': ['Exposing stack traces or sensitive information in error messages', 'Inadequate error handling leading to information leakage', 'Failure to log errors for audit purposes']}
+
+The agent already has these capabilities:
+- structural_analysis: Analyze code structure: function length, nesting, complexity
+- logic_correctness: Detect logic bugs: off-by-one, wrong operators, missing null checks
+- security_analysis: Identify security vulnerabilities: injection, traversal, credentials
+- performance_analysis: Spot performance issues: N+1 patterns, unnecessary copies
+- style_consistency: Check code style and maintainability: naming, magic numbers
+- severity_ranking: Rank issues by severity and provide actionable output
+
+Propose exactly ONE new capability that closes a gap the existing set does not
+cover. The new capability must be specific to this domain and must not overlap
+with the existing list.
+
+Respond with JSON matching this schema:
+{
+  "name": "<snake_case identifier>",
+  "description": "<one-line description>",
+  "prompt_fragment": "## <Named Pass>\n- <specific instruction>\n- <specific instruction>\n...",
+  "validator_code": "<optional: a Python function `def check(code: str) -> list[str]` that returns a list of short string descriptions when the code exhibits the problem and [] otherwise. Only `re`, `ast`, `string` imports are permitted. Do not open files, do not call subprocesses, do not import os/sys/io/subprocess/socket/pickle. Use null if no static check is practical.>"
+}

@@ -1,18 +1,18 @@
-# Rollback-loop demonstration (scripted LLM — not a live run)
+# Rollback-loop demonstration (scripted LLM; not a live run)
 
 > **Read this first.** The companion `journal.json` in this directory is
 > produced by a deterministic script, **not** by calling the OpenAI API.
-> Only the LLM boundary is replaced. Every other component — the real
+> Only the LLM boundary is replaced. Every other component; the real
 > `StateMachine`, `ValidationPhase`, `EvolutionJournal`, cross-check
-> logic, prompt composition, and diagnoser — runs unmodified. The live
+> logic, prompt composition, and diagnoser; runs unmodified. The live
 > OpenAI run lives under [`../example_run/`](../example_run/) and is
 > the one you want if you're looking for real API cost and latency
 > numbers.
 >
 > This demo exists because the live run graduates on the first specialized
 > attempt. That's useful as a happy-path proof point, but it leaves the
-> closed-loop rollback branch — the section the writeup spends its
-> cross-check pages on — unexercised. Running a second live execution
+> closed-loop rollback branch; the section the writeup spends its
+> cross-check pages on; unexercised. Running a second live execution
 > just to hope it fails would burn tokens on a coin flip. A scripted LLM
 > tuned to miss the F1 bar on attempt 1 and clear it on attempt 2 shows
 > the branch deterministically, at zero cost, using the real phase code.
@@ -46,99 +46,97 @@ event with the derived adjustments, two `METRIC_MEASUREMENT` pairs
 (baseline + specialized, once per attempt), and six `DECISION` events
 from the cross-checker. Final state: `SPECIALIZED`.
 
-## Benchmark outcome — both attempts
+## Benchmark outcome; both attempts
 
 | Metric | Baseline (same both attempts) | Attempt 1 specialized | Attempt 2 specialized |
 |---|---:|---:|---:|
-| Precision | 0.000 | 0.778 | 1.000 |
-| Recall | 0.000 | 0.467 | 1.000 |
-| F1 | 0.000 | **0.583** | **1.000** |
-| Specificity | 0.000 | 0.600 | 1.000 |
+| Precision | 0.000 | 0.714 | 1.000 |
+| Recall | 0.000 | 0.625 | 1.000 |
+| F1 | 0.000 | **0.667** | **1.000** |
+| Specificity | 0.000 | 0.333 | 1.000 |
 
-Attempt 1 misses the 0.7 F1 guard because the scripted LLM is tuned to
-flag 7 of the 15 buggy samples and over-flag 2 of the 5 clean ones.
-Attempt 2 catches all 15 bugs and leaves all 5 clean samples alone —
-exactly the shape of a successful post-diagnosis retry.
+Attempt 1 misses the 0.7 F1 guard. The scripted LLM flags some buggy
+samples and over-flags some clean ones; exactly the shape that trips
+the cross-check + delta guards. Attempt 2 catches every bug and leaves
+the clean samples alone; the post-diagnosis retry working as designed.
 
+Validation runs on the partition's 11-sample slice (the agent
+partitions its corpus once at differentiate-time, by `config.seed`).
 The F1=1.0 on attempt 2 is a property of the scripted fixture, not a
-claim about what the real model achieves. The live run in `../example_run/`
-is the honest ceiling: specialized F1 = 0.778 there.
+claim about what the real model achieves. The current honest ceiling
+is the multi-seed batch in
+[`../example_run/seeds/`](../example_run/seeds/): F1 = 0.837
+[0.800, 0.889] on the code-quality 11-sample validation slice.
 
 ## What the cross-check caught
 
-Attempt 1 surfaced three disagreements — the exact signals
-`diagnose_failure` reads when F1 falls short:
+Attempt 1 surfaced three disagreements on the partition's validation
+slice; the exact signals `diagnose_failure` reads when F1 falls short:
 
-| Sample | Disagreement kind | Evidence |
-|---|---|---|
-| `smell_03` | `llm_flagged_structure_but_ast_clean` | `max_fn_length=18 max_nesting_depth=1` |
-| `clean_02` | `llm_flagged_structure_but_ast_clean` | `max_fn_length=9 max_nesting_depth=1` |
-| `clean_03` | `scanner_found_security_pattern_llm_missed` | `Use of eval() — potential code injection` |
+| Sample | Disagreement kind |
+|---|---|
+| `smell_03` | `llm_flagged_structure_but_ast_clean` |
+| `clean_02` | `llm_flagged_structure_but_ast_clean` |
+| `clean_03` | `scanner_found_security_pattern_llm_missed` |
 
 Two structural over-flags on short, shallow functions; one security miss
 where the regex scanner still fires on the word `eval` even though the
-code uses it inside a whitelist-gated AST walker (this is the known false
-positive in the scanner — the writeup's §3.5 explains why the
-diagnoser treats cross-check signals as rules of thumb, not ground truth).
+code uses it inside a whitelist-gated AST walker (a known false positive
+in the scanner; the diagnoser treats cross-check signals as rules of
+thumb, not ground truth).
 
-From those three counts, `_adjustments_from_cross_check` produces two
+From those counts, `_adjustments_from_cross_check` produces two
 free-form adjustment strings, both visible in the journal's
 `ROLLBACK_REASON` event:
 
 > *Be conservative on structural issues: the AST cross-check disagreed on
-> 2 sample(s) where a short, shallow function was flagged. Do not report
-> structural problems unless a function exceeds ~20 lines or nesting
-> depth exceeds 2.*
+> 2 sample(s) where a short, shallow function was flagged…*
 >
 > *Scan harder for security patterns: the pattern scanner caught 1
-> case(s) the LLM missed (Use of eval() — potential code injection).
-> Always flag eval/exec on user input, hardcoded credentials, shell=True
-> with string formatting, SQL string concatenation, and pickle.loads of
-> untrusted data.*
+> case(s) the LLM missed (Use of eval(); potential code injection)…*
 
-`SpecializationPhase` splices those two strings into the next composed
-prompt under a clearly-labelled marker (`IMPORTANT adjustments based on
-prior evaluation`). That marker is what the scripted LLM keys off when
-deciding whether to return its weak or strong review table — the same
-signal a real model sees in the system prompt on the retry.
+`SpecializationPhase` splices those into the next composed prompt under
+a clearly-labelled `IMPORTANT adjustments based on prior evaluation`
+marker (with the K=3 cap for older attempts). That marker is what the
+scripted LLM keys off when deciding whether to return its weak or
+strong review table.
 
 ## What the cross-check still flagged on attempt 2
 
 Attempt 2 passes the F1 guard (1.000 ≥ 0.700), but the cross-checker
-still logs three disagreements:
-
-| Sample | Kind | Why it's informational, not actionable |
-|---|---|---|
-| `smell_03` | structural over-flag | LLM correctly flags dead-code-after-return; AST metrics don't detect dead code, so they look clean |
-| `smell_04` | structural over-flag | LLM correctly flags magic numbers; AST metrics don't detect magic numbers either |
-| `clean_03` | security miss | Same `eval` false positive from the regex scanner |
+still logs disagreements (`smell_03` structure over-flag, `clean_03`
+security miss). They're informational rather than actionable: the LLM
+correctly flags dead-code-after-return (which AST metrics don't detect)
+and correctly leaves the whitelist-gated `eval` alone (which the regex
+scanner still trips on).
 
 These are the cross-checker earning its keep in both directions: when F1
 is low, its signals shape the diagnoser's adjustments; when F1 is high,
 they're preserved as evidence in the journal rather than suppressed.
 A reviewer tracing this run can see the specialization actually knows
-things the mechanical cross-check doesn't — which is the writeup's
+things the mechanical cross-check doesn't; which is the writeup's
 point about the cross-check being an intentionally noisy oracle.
 
 ## Journal structure
 
-Event counts across the full 190-event journal:
+Event counts across the full 132-event journal (validation runs on the
+11-sample partition slice, so total events fell from the
+pre-multi-seed-partition era's 190):
 
 | Event type | Count |
 |---|---:|
-| `LLM_CALL` | 84 |
-| `DECISION` | 64 |
-| `CAPABILITY_ADDED` | 21 |
+| `LLM_CALL` | 48 |
+| `DECISION` | 43 |
+| `CAPABILITY_ADDED` | 20 |
 | `PHASE_RESULT` | 8 |
 | `STATE_TRANSITION` | 7 |
 | `METRIC_MEASUREMENT` | 4 |
 | `GUARD_FAILURE` | 1 |
 | `ROLLBACK_REASON` | 1 |
-| **Total** | **190** |
+| **Total** | **132** |
 
-The 84 `LLM_CALL` events are scripted (no network). The counts are otherwise
-directly comparable to `../example_run/journal.json`: same event schema,
-same phase code, same journal writer.
+The 48 `LLM_CALL` events are scripted (no network). Same event schema
+and phase code as a live run.
 
 Every `LLM_CALL` records the model name passed by the phase (`scripted-planner`
 for the gpt-4o-mini-equivalent calls, `scripted-executor` for the gpt-4o-equivalent
@@ -152,7 +150,7 @@ tokens were spent.
 # scripts/generate_rollback_demo.py
 def generate(self, prompt: str, *, model: str | None = None) -> str:
     if _BASELINE_MARKER in prompt and "## Domain-Specific Insights" not in prompt:
-        # Baseline uses the undifferentiated prompt — return free-form
+        # Baseline uses the undifferentiated prompt; return free-form
         # "no issues" text so baseline F1 is 0, matching the live run.
         response = "The code looks fine to me. No issues found."
     else:
@@ -176,12 +174,12 @@ Two signals pick the table:
 2. **Before vs. after rollback.** Detected by the presence of the
    literal marker `IMPORTANT adjustments based on prior evaluation`,
    which `SpecializationPhase` writes into the prompt only after
-   `diagnose_failure` produces adjustments. One table returns 7 of 15
-   bugs with 2 false positives (F1 = 0.583); the other returns 15 of 15
-   and 0 false positives (F1 = 1.0).
+   `diagnose_failure` produces adjustments. One table is tuned to miss
+   the 0.7 F1 bar on the 11-sample validation slice (F1 = 0.667); the
+   other returns the truth on every sample (F1 = 1.0).
 
-Everything else — the prompt assembly, the cross-check, the diagnoser,
-the state transitions, the metric calculations, the journal writer —
+Everything else; the prompt assembly, the cross-check, the diagnoser,
+the state transitions, the metric calculations, the journal writer;
 runs the same code paths a live run exercises.
 
 ## Reproducing the journal

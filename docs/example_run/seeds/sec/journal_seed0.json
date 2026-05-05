@@ -1,0 +1,1363 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-05-05T15:40:33.083013+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "undifferentiated",
+        "to": "sensing",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:33.083701+00:00",
+      "event_type": "decision",
+      "phase": "sensing",
+      "data": {
+        "decision": "Sensing domain: security_audit",
+        "reasoning": "probe_count=2, tool_fit=security: 1"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:40.974083+00:00",
+      "event_type": "llm_call",
+      "phase": "sensing",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0de86906815af4c4",
+        "token_count": 1279,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:40.974129+00:00",
+      "event_type": "phase_result",
+      "phase": "sensing",
+      "data": {
+        "domain_name": "security_audit",
+        "strategy_count": 4,
+        "taxonomy_categories": [
+          "Command Injection",
+          "Subprocess Management",
+          "Data Leakage"
+        ],
+        "tool_count": 3,
+        "insight_count": 3,
+        "tool_fit": {
+          "security": 1
+        },
+        "probe_count": 2
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:44.146549+00:00",
+      "event_type": "llm_call",
+      "phase": "capability_generation",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "75f106a4a1ab0c5c",
+        "token_count": 879,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:44.146588+00:00",
+      "event_type": "decision",
+      "phase": "capability_generation",
+      "data": {
+        "decision": "Proposal 'subprocess_context_analysis' bypassed empirical holdout: partition too small or overlapping",
+        "reasoning": "overlapping=True holdout_size=2"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:44.146613+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "generated: admitted after prompt-only review"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:44.146619+00:00",
+      "event_type": "decision",
+      "phase": "capability_generation",
+      "data": {
+        "decision": "Admitted generated capability: subprocess_context_analysis",
+        "reasoning": "prompt fragment=242 chars, validator=none"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:44.146624+00:00",
+      "event_type": "phase_result",
+      "phase": "capability_generation",
+      "data": {
+        "admitted": "subprocess_context_analysis",
+        "origin": "generated",
+        "has_validator": false
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:44.147036+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "sensing",
+        "to": "differentiating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.864602+00:00",
+      "event_type": "llm_call",
+      "phase": "planning",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "3a4c167ba052481b",
+        "token_count": 1435,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.864627+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.864633+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.864661+00:00",
+      "event_type": "decision",
+      "phase": "planning",
+      "data": {
+        "decision": "Selected 3 capabilities, 4 passes",
+        "reasoning": "This plan focuses on the most relevant capabilities for security auditing, particularly in subprocess management, which is critical for identifying command injection vulnerabilities. The multi-pass review pipeline ensures a thorough examination of both static and dynamic aspects of the code, while the evaluation criteria set a reasonable standard for performance."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.864666+00:00",
+      "event_type": "phase_result",
+      "phase": "planning",
+      "data": {
+        "selected_capabilities": [
+          "security_analysis",
+          "subprocess_context_analysis",
+          "severity_ranking"
+        ],
+        "pass_count": 4,
+        "evaluation_criteria": {
+          "f1_threshold": 0.6,
+          "precision_min": 0.5,
+          "recall_min": 0.5
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865234+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Spliced 1 generated fragment(s) into the prompt",
+        "reasoning": "capability_generation produced: subprocess_context_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865244+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Composed system prompt",
+        "reasoning": "Assembled from 3 capability fragments + domain insights (165 chars) + 1 generated fragment(s)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865249+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Wired into review pipeline: Identify security vulnerabilities: injection, traversal, credentials"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865253+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "Wired into review pipeline: Analyze the context of subprocess calls to identify potential vulnerabilities related to command execution."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865257+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "severity_ranking",
+        "reason": "Wired into review pipeline: Rank issues by severity and provide actionable output"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865265+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Configured 4 review passes: ['Static Code Analysis', 'Dynamic Analysis', 'Subprocess Context Analysis', 'Severity Ranking']",
+        "reasoning": "Multi-pass architecture discovered during planning \u2014 each pass focuses on a specific issue category for higher precision"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865276+00:00",
+      "event_type": "phase_result",
+      "phase": "specialization",
+      "data": {
+        "prompt_length": 2321,
+        "pass_count": 4,
+        "capabilities": [
+          "security_analysis",
+          "subprocess_context_analysis",
+          "severity_ranking"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865604+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "differentiating",
+        "to": "validating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865865+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Starting benchmark evaluation",
+        "reasoning": "Running both baseline and specialized agents against the full benchmark corpus to compute comparative metrics"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:40:59.865883+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running baseline evaluation",
+        "reasoning": "Undifferentiated agent with generic prompt \u2014 this is the control"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:02.484619+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "134c2b043a799378",
+        "token_count": 411,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:05.000977+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0839cecdfbbf7fa0",
+        "token_count": 318,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:08.150895+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "a0cc3fca49d613f0",
+        "token_count": 311,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:10.577891+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "32ed33ca977b4e4e",
+        "token_count": 342,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:10.578108+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "baseline_precision": 0.75,
+        "baseline_recall": 1.0,
+        "baseline_f1": 0.8571428571428571,
+        "baseline_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:10.578123+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running specialized evaluation",
+        "reasoning": "Specialized agent with composed prompt from differentiation"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:10.579115+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:14.262888+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "e6b9295a0e2f20c7",
+        "token_count": 864,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:14.263157+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:25.726111+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "3866841c63959d0c",
+        "token_count": 740,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:25.726315+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:34.017456+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "da868250b10c4e9f",
+        "token_count": 749,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:34.017821+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.486909+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "769c237dea5d9dfb",
+        "token_count": 797,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.487041+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "specialized_precision": 0.75,
+        "specialized_recall": 1.0,
+        "specialized_f1": 0.8571428571428571,
+        "specialized_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.487071+00:00",
+      "event_type": "phase_result",
+      "phase": "validation",
+      "data": {
+        "baseline": {
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.8571,
+          "specificity": 0.0
+        },
+        "specialized": {
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.8571,
+          "specificity": 0.0
+        },
+        "delta": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "specificity": 0.0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.488911+00:00",
+      "event_type": "guard_failure",
+      "phase": "",
+      "data": {
+        "transition": "validating \u2192 specialized",
+        "guard": "improvement_over_baseline",
+        "reason": "F1 \u0394=+0.000 (need \u2265+0.05), specificity \u0394=+0.000 (allowed \u2265-0.05)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.492710+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "validating",
+        "to": "rollback",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.8571428571428571,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_count": 0,
+          "total_tokens": 8125
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.492982+00:00",
+      "event_type": "rollback_reason",
+      "phase": "",
+      "data": {
+        "reason": "Validation failed: specialized_F1=0.857, baseline_F1=0.857, delta=+0.000",
+        "adjustments": [
+          "Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:37.493428+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "rollback",
+        "to": "differentiating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.8571428571428571,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes'], 'summary': 'specialized_F1=",
+          "rollback_adjustments": "['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes']"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120371+00:00",
+      "event_type": "llm_call",
+      "phase": "planning",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "3a4c167ba052481b",
+        "token_count": 1474,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120393+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120397+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120417+00:00",
+      "event_type": "decision",
+      "phase": "planning",
+      "data": {
+        "decision": "Selected 2 capabilities, 5 passes",
+        "reasoning": "This plan focuses on both static and dynamic analysis to comprehensively identify vulnerabilities related to subprocess usage. By prioritizing context analysis and best practices, the agent can effectively mitigate risks associated with command injection and subprocess management."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120421+00:00",
+      "event_type": "phase_result",
+      "phase": "planning",
+      "data": {
+        "selected_capabilities": [
+          "security_analysis",
+          "subprocess_context_analysis"
+        ],
+        "pass_count": 5,
+        "evaluation_criteria": {
+          "f1_threshold": 0.6,
+          "precision_min": 0.5,
+          "recall_min": 0.5
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120803+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Applying 1 rollback adjustments (history depth=1)",
+        "reasoning": "Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120822+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Spliced 1 generated fragment(s) into the prompt",
+        "reasoning": "capability_generation produced: subprocess_context_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120826+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Composed system prompt",
+        "reasoning": "Assembled from 2 capability fragments + domain insights (361 chars) + 1 generated fragment(s)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120829+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Wired into review pipeline: Identify security vulnerabilities: injection, traversal, credentials"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120831+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "Wired into review pipeline: Analyze the context of subprocess calls to identify potential vulnerabilities related to command execution."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120836+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Configured 5 review passes: ['Static Code Analysis', 'Dynamic Analysis for Command Injection', 'Subprocess Context Analysis', 'Code Review for Best Practices', 'Severity Ranking of Issues']",
+        "reasoning": "Multi-pass architecture discovered during planning \u2014 each pass focuses on a specific issue category for higher precision"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.120843+00:00",
+      "event_type": "phase_result",
+      "phase": "specialization",
+      "data": {
+        "prompt_length": 2107,
+        "pass_count": 5,
+        "capabilities": [
+          "security_analysis",
+          "subprocess_context_analysis"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.122514+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Prompt re-composed after rollback: +3/-8 lines",
+        "reasoning": "before=2321 chars, after=2107 chars; diff captured in CLI output for review"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.122561+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "differentiating",
+        "to": "validating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.8571428571428571,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes'], 'summary': 'specialized_F1=",
+          "rollback_adjustments": "['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes']"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.122683+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Starting benchmark evaluation",
+        "reasoning": "Running both baseline and specialized agents against the full benchmark corpus to compute comparative metrics"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:51.122695+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running baseline evaluation",
+        "reasoning": "Undifferentiated agent with generic prompt \u2014 this is the control"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:53.471653+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "134c2b043a799378",
+        "token_count": 411,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:56.562869+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0839cecdfbbf7fa0",
+        "token_count": 318,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:41:58.938112+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "a0cc3fca49d613f0",
+        "token_count": 311,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:01.450732+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "32ed33ca977b4e4e",
+        "token_count": 342,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:01.450818+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "baseline_precision": 0.75,
+        "baseline_recall": 1.0,
+        "baseline_f1": 0.8571428571428571,
+        "baseline_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:01.450826+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running specialized evaluation",
+        "reasoning": "Specialized agent with composed prompt from differentiation"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:01.451345+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:04.292290+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "e4b0e89d33d1c343",
+        "token_count": 790,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:04.292551+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:07.285034+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "e29a89be662a069c",
+        "token_count": 688,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:07.285357+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:10.326767+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "ef1610f2291a42f6",
+        "token_count": 705,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:10.327182+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.952255+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "49fd800de35167ce",
+        "token_count": 742,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.952359+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "specialized_precision": 0.75,
+        "specialized_recall": 1.0,
+        "specialized_f1": 0.8571428571428571,
+        "specialized_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.952387+00:00",
+      "event_type": "phase_result",
+      "phase": "validation",
+      "data": {
+        "baseline": {
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.8571,
+          "specificity": 0.0
+        },
+        "specialized": {
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.8571,
+          "specificity": 0.0
+        },
+        "delta": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "specificity": 0.0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.953783+00:00",
+      "event_type": "guard_failure",
+      "phase": "",
+      "data": {
+        "transition": "validating \u2192 specialized",
+        "guard": "improvement_over_baseline",
+        "reason": "F1 \u0394=+0.000 (need \u2265+0.05), specificity \u0394=+0.000 (allowed \u2265-0.05)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.954504+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "validating",
+        "to": "rollback",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.8571428571428571,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes'], 'summary': 'specialized_F1=",
+          "rollback_adjustments": "['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes']",
+          "rollback_count": 1,
+          "total_tokens": 13906
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.954815+00:00",
+      "event_type": "rollback_reason",
+      "phase": "",
+      "data": {
+        "reason": "Validation failed: specialized_F1=0.857, baseline_F1=0.857, delta=+0.000",
+        "adjustments": [
+          "Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:13.955284+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "rollback",
+        "to": "differentiating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.8571428571428571,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes'], 'summary': 'specialized_F1=",
+          "rollback_adjustments": "['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes']"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.603936+00:00",
+      "event_type": "llm_call",
+      "phase": "planning",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "3a4c167ba052481b",
+        "token_count": 1473,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.603958+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.603963+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.603983+00:00",
+      "event_type": "decision",
+      "phase": "planning",
+      "data": {
+        "decision": "Selected 2 capabilities, 5 passes",
+        "reasoning": "This plan focuses on both static and dynamic analysis to comprehensively identify vulnerabilities related to subprocess usage. By prioritizing context analysis and best practices, the agent can effectively mitigate risks associated with command injection and subprocess management."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.603987+00:00",
+      "event_type": "phase_result",
+      "phase": "planning",
+      "data": {
+        "selected_capabilities": [
+          "security_analysis",
+          "subprocess_context_analysis"
+        ],
+        "pass_count": 5,
+        "evaluation_criteria": {
+          "f1_threshold": 0.6,
+          "precision_min": 0.5,
+          "recall_min": 0.5
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604442+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Applying 1 rollback adjustments (history depth=2)",
+        "reasoning": "Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604463+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Spliced 1 generated fragment(s) into the prompt",
+        "reasoning": "capability_generation produced: subprocess_context_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604467+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Composed system prompt",
+        "reasoning": "Assembled from 2 capability fragments + domain insights (507 chars) + 1 generated fragment(s)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604471+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Wired into review pipeline: Identify security vulnerabilities: injection, traversal, credentials"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604474+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "subprocess_context_analysis",
+        "reason": "Wired into review pipeline: Analyze the context of subprocess calls to identify potential vulnerabilities related to command execution."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604481+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Configured 5 review passes: ['Static Code Analysis', 'Dynamic Analysis for Command Injection', 'Subprocess Context Analysis', 'Best Practices Code Review', 'Severity Ranking of Issues']",
+        "reasoning": "Multi-pass architecture discovered during planning \u2014 each pass focuses on a specific issue category for higher precision"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.604488+00:00",
+      "event_type": "phase_result",
+      "phase": "specialization",
+      "data": {
+        "prompt_length": 2253,
+        "pass_count": 5,
+        "capabilities": [
+          "security_analysis",
+          "subprocess_context_analysis"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.605689+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Prompt re-composed after rollback: +1/-0 lines",
+        "reasoning": "before=2107 chars, after=2253 chars; diff captured in CLI output for review"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.605738+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "differentiating",
+        "to": "validating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.8571428571428571,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes'], 'summary': 'specialized_F1=",
+          "rollback_adjustments": "['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes']"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.605900+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Starting benchmark evaluation",
+        "reasoning": "Running both baseline and specialized agents against the full benchmark corpus to compute comparative metrics"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:23.605911+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running baseline evaluation",
+        "reasoning": "Undifferentiated agent with generic prompt \u2014 this is the control"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:26.906176+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "134c2b043a799378",
+        "token_count": 501,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:28.959036+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0839cecdfbbf7fa0",
+        "token_count": 318,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:31.298388+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "a0cc3fca49d613f0",
+        "token_count": 301,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:33.353246+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "32ed33ca977b4e4e",
+        "token_count": 338,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:33.353392+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "baseline_precision": 0.6,
+        "baseline_recall": 1.0,
+        "baseline_f1": 0.7499999999999999,
+        "baseline_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:33.353401+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running specialized evaluation",
+        "reasoning": "Specialized agent with composed prompt from differentiation"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:33.354389+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:36.536393+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "aa7daef726c3db62",
+        "token_count": 817,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:36.536616+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:39.582088+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "ed6b776fe2730d26",
+        "token_count": 724,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:39.582512+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:43.594948+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "a22623a84f148d0e",
+        "token_count": 745,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:43.595290+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:46.281167+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "905ad9fe502a2cf2",
+        "token_count": 782,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:46.281213+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "specialized_precision": 0.75,
+        "specialized_recall": 1.0,
+        "specialized_f1": 0.8571428571428571,
+        "specialized_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:46.281225+00:00",
+      "event_type": "phase_result",
+      "phase": "validation",
+      "data": {
+        "baseline": {
+          "precision": 0.6,
+          "recall": 1.0,
+          "f1": 0.75,
+          "specificity": 0.0
+        },
+        "specialized": {
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.8571,
+          "specificity": 0.0
+        },
+        "delta": {
+          "precision": 0.15,
+          "recall": 0.0,
+          "f1": 0.1071,
+          "specificity": 0.0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:46.281851+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "validating",
+        "to": "specialized",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'subprocess_context_analysis': '## Subprocess Context Analysis\\n- Evaluate the context in which subprocess calls are made, focusing on the use of shell=True and user input handling.\\n- Identify poten",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_08', 'detected': ['security', 'structure'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_06', 'detected': ['secu",
+          "baseline_f1": 0.7499999999999999,
+          "specialized_f1": 0.8571428571428571,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes'], 'summary': 'specialized_F1=",
+          "rollback_adjustments": "['Specialization did not improve over baseline \u2014 simplify the prompt to reduce confusion and focus on the most impactful review passes']",
+          "rollback_count": 2,
+          "total_tokens": 19905
+        }
+      }
+    }
+  ]
+}

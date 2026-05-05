@@ -1,4 +1,4 @@
-"""Planning phase — capability selection and architecture decisions.
+"""Planning phase; capability selection and architecture decisions.
 
 Based on domain knowledge from sensing, the agent generates a
 specialization plan: which capabilities to acquire, what architecture
@@ -11,10 +11,39 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from stem_agent.capabilities.registry import CapabilityRegistry, build_default_registry
+from stem_agent.capabilities.registry import (
+    Capability,
+    CapabilityRegistry,
+    build_default_registry,
+)
 from stem_agent.core.journal import EvolutionJournal
+from stem_agent.core.priors import NEUTRAL_WEIGHT, weight_capabilities
 from stem_agent.phases.sensing import DomainKnowledge
 from stem_agent.ports.llm import LLMPort
+from stem_agent.ports.storage import StoragePort
+
+
+def _rank_capabilities(
+    capabilities: list[Capability],
+    tool_fit: dict[str, int],
+    prior_weights: dict[str, float] | None = None,
+) -> list[Capability]:
+    """Sort capabilities by combined tool-fit score and cross-run prior.
+
+    Score = (1 + tool_fit_match) * prior_weight, descending; ties keep
+    the registry's original order so the output is deterministic when
+    both signals are absent.
+    """
+    weights = prior_weights or {}
+
+    def score(cap: Capability) -> float:
+        tool_score = sum(tool_fit.get(tag, 0) for tag in cap.tags)
+        prior = weights.get(cap.name, NEUTRAL_WEIGHT)
+        return -((1 + tool_score) * prior)
+
+    indexed = list(enumerate(capabilities))
+    indexed.sort(key=lambda pair: (score(pair[1]), pair[0]))
+    return [cap for _, cap in indexed]
 
 
 class ReviewPassConfig(BaseModel):
@@ -59,8 +88,9 @@ The agent has learned the following about the domain:
 - Issue taxonomy: {taxonomy}
 - Tools/techniques: {tools}
 - Key insights: {insights}
+- Tool-fit hits over probe slice: {tool_fit}
 
-Available capabilities the agent can select:
+Available capabilities the agent can select (ordered by tool-fit relevance):
 {capabilities}
 
 Design a specialization plan:
@@ -99,6 +129,17 @@ class PlanningPhase:
     def name(self) -> str:
         return "planning"
 
+    @staticmethod
+    def _prior_weights_from(context: dict[str, Any]) -> dict[str, float]:
+        storage: StoragePort | None = context.get("storage")
+        domain: str = context.get("domain") or context.get("domain_knowledge").domain_name
+        if storage is None or not domain:
+            return {}
+        try:
+            return weight_capabilities(domain, storage)
+        except Exception:
+            return {}
+
     def execute(
         self,
         context: dict[str, Any],
@@ -116,9 +157,17 @@ class PlanningPhase:
             Context updated with 'specialization_plan' key.
         """
         knowledge: DomainKnowledge = context["domain_knowledge"]
-        available_caps = self._registry.list_all()
+        prior_weights = self._prior_weights_from(context)
+        ranked_caps = _rank_capabilities(
+            self._registry.list_all(), knowledge.tool_fit, prior_weights
+        )
 
-        cap_descriptions = "\n".join(f"- {c.name}: {c.description}" for c in available_caps)
+        cap_descriptions = "\n".join(f"- {c.name}: {c.description}" for c in ranked_caps)
+        tool_fit_summary = (
+            ", ".join(f"{k}={v}" for k, v in sorted(knowledge.tool_fit.items()))
+            if knowledge.tool_fit
+            else "(none)"
+        )
 
         prompt = PLANNING_PROMPT_TEMPLATE.format(
             domain=knowledge.domain_name,
@@ -127,6 +176,7 @@ class PlanningPhase:
             tools=", ".join(knowledge.tool_categories[:5]),
             insights=", ".join(knowledge.key_insights[:3]),
             capabilities=cap_descriptions,
+            tool_fit=tool_fit_summary,
         )
 
         prompt_hash = EvolutionJournal.hash_prompt(prompt)
@@ -156,7 +206,7 @@ class PlanningPhase:
                 journal.log_decision(
                     phase=self.name,
                     decision=f"Skipped unknown capability: {cap_name}",
-                    reasoning="Capability not found in registry — LLM hallucinated a name",
+                    reasoning="Capability not found in registry; LLM hallucinated a name",
                 )
 
         plan = plan.model_copy(update={"selected_capabilities": valid_caps})

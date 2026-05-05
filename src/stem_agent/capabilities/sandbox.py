@@ -16,7 +16,7 @@ specialized agent:
    wall-clock timeout.
 
 Defense in depth: the AST scan is the precise, fast layer; the
-subprocess limits catch anything the scan missed — computed attribute
+subprocess limits catch anything the scan missed; computed attribute
 access, recursion bombs, memory balloons, or infinite loops. The
 combination is defensible for a submission demo without pulling in
 RestrictedPython or gvisor.
@@ -163,7 +163,7 @@ def _preexec_limits() -> None:
     behaviour makes lowering the address-space cap fragile, and the AST
     scan already blocks the memory-abuse vectors we care about
     (``ctypes``, ``mmap`` via ``importlib``, etc.). RLIMIT_FSIZE is not
-    set either — it would cap stdout pipe writes on some platforms, and
+    set either; it would cap stdout pipe writes on some platforms, and
     the AST scan already forbids ``open``, ``pickle``, and friends.
     """
     resource.setrlimit(resource.RLIMIT_CPU, (2, 2))

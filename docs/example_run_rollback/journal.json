@@ -1,7 +1,7 @@
 {
   "events": [
     {
-      "timestamp": "2026-04-17T15:19:48.027025+00:00",
+      "timestamp": "2026-05-05T18:32:08.058618+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -13,32 +13,33 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
+          "token_budget_cap": null,
           "domain": "code_quality_analysis"
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.027579+00:00",
+      "timestamp": "2026-05-05T18:32:08.060465+00:00",
       "event_type": "decision",
       "phase": "sensing",
       "data": {
         "decision": "Sensing domain: code_quality_analysis",
-        "reasoning": "Initial signal received; querying LLM for structured domain knowledge"
+        "reasoning": "probe_count=4, tool_fit=structure: 1"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.027662+00:00",
+      "timestamp": "2026-05-05T18:32:08.060501+00:00",
       "event_type": "llm_call",
       "phase": "sensing",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "770d8b9c32c30e76",
-        "token_count": 594,
+        "prompt_hash": "9e20be6d9c8d040a",
+        "token_count": 1171,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.027672+00:00",
+      "timestamp": "2026-05-05T18:32:08.060514+00:00",
       "event_type": "phase_result",
       "phase": "sensing",
       "data": {
@@ -51,11 +52,15 @@
           "performance"
         ],
         "tool_count": 3,
-        "insight_count": 3
+        "insight_count": 3,
+        "tool_fit": {
+          "structure": 1
+        },
+        "probe_count": 4
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.028048+00:00",
+      "timestamp": "2026-05-05T18:32:08.060739+00:00",
       "event_type": "llm_call",
       "phase": "capability_generation",
       "data": {
@@ -66,35 +71,28 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.063745+00:00",
-      "event_type": "capability_added",
-      "phase": "",
-      "data": {
-        "capability": "input_validation_gap",
-        "reason": "generated: admitted after sandbox validation"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.063799+00:00",
-      "event_type": "decision",
-      "phase": "capability_generation",
-      "data": {
-        "decision": "Admitted generated capability: input_validation_gap",
-        "reasoning": "prompt fragment=100 chars, validator=yes"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.063810+00:00",
+      "timestamp": "2026-05-05T18:32:08.082215+00:00",
       "event_type": "phase_result",
       "phase": "capability_generation",
       "data": {
-        "admitted": "input_validation_gap",
-        "origin": "generated",
-        "has_validator": true
+        "holdout_outcome": "rejected_by_holdout",
+        "holdout_size": 4,
+        "arm_with_proposal_correct": 3,
+        "arm_without_proposal_correct": 3,
+        "proposal_name": "input_validation_gap"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064414+00:00",
+      "timestamp": "2026-05-05T18:32:08.082245+00:00",
+      "event_type": "decision",
+      "phase": "capability_generation",
+      "data": {
+        "decision": "Proposal 'input_validation_gap' rejected by empirical holdout",
+        "reasoning": "arm_a=3 \u2264 arm_b=3 on 4"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T18:32:08.082586+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -106,24 +104,24 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
-          "domain": "code_quality_analysis",
-          "generated_fragments": "{'input_validation_gap': '\\n\\n## Input Validation Gap Pass\\n- Flag untyped input flowing into an index, arithmetic, or subscript.'}"
+          "token_budget_cap": null,
+          "domain": "code_quality_analysis"
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064796+00:00",
+      "timestamp": "2026-05-05T18:32:08.171506+00:00",
       "event_type": "llm_call",
       "phase": "planning",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "73967120ade7ba20",
+        "prompt_hash": "4d451b914c72ae1b",
         "token_count": 907,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064805+00:00",
+      "timestamp": "2026-05-05T18:32:08.171521+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -132,7 +130,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064810+00:00",
+      "timestamp": "2026-05-05T18:32:08.171526+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -141,7 +139,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064814+00:00",
+      "timestamp": "2026-05-05T18:32:08.171528+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -150,7 +148,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064817+00:00",
+      "timestamp": "2026-05-05T18:32:08.171529+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -159,7 +157,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064819+00:00",
+      "timestamp": "2026-05-05T18:32:08.171531+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -168,7 +166,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064855+00:00",
+      "timestamp": "2026-05-05T18:32:08.171552+00:00",
       "event_type": "decision",
       "phase": "planning",
       "data": {
@@ -177,7 +175,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.064859+00:00",
+      "timestamp": "2026-05-05T18:32:08.171555+00:00",
       "event_type": "phase_result",
       "phase": "planning",
       "data": {
@@ -197,25 +195,16 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065187+00:00",
-      "event_type": "decision",
-      "phase": "specialization",
-      "data": {
-        "decision": "Spliced 1 generated fragment(s) into the prompt",
-        "reasoning": "capability_generation produced: input_validation_gap"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065194+00:00",
+      "timestamp": "2026-05-05T18:32:08.171879+00:00",
       "event_type": "decision",
       "phase": "specialization",
       "data": {
         "decision": "Composed system prompt",
-        "reasoning": "Assembled from 5 capability fragments + domain insights (137 chars) + 1 generated fragment(s)"
+        "reasoning": "Assembled from 5 capability fragments + domain insights (137 chars) + 0 generated fragment(s)"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065199+00:00",
+      "timestamp": "2026-05-05T18:32:08.171888+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -224,7 +213,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065203+00:00",
+      "timestamp": "2026-05-05T18:32:08.171891+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -233,7 +222,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065206+00:00",
+      "timestamp": "2026-05-05T18:32:08.171892+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -242,7 +231,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065209+00:00",
+      "timestamp": "2026-05-05T18:32:08.171894+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -251,7 +240,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065211+00:00",
+      "timestamp": "2026-05-05T18:32:08.171896+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -260,7 +249,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065217+00:00",
+      "timestamp": "2026-05-05T18:32:08.171900+00:00",
       "event_type": "decision",
       "phase": "specialization",
       "data": {
@@ -269,11 +258,11 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065230+00:00",
+      "timestamp": "2026-05-05T18:32:08.171907+00:00",
       "event_type": "phase_result",
       "phase": "specialization",
       "data": {
-        "prompt_length": 3261,
+        "prompt_length": 3160,
         "pass_count": 4,
         "capabilities": [
           "structural_analysis",
@@ -285,7 +274,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065372+00:00",
+      "timestamp": "2026-05-05T18:32:08.172024+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -297,13 +286,13 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
-          "domain": "code_quality_analysis",
-          "generated_fragments": "{'input_validation_gap': '\\n\\n## Input Validation Gap Pass\\n- Flag untyped input flowing into an index, arithmetic, or subscript.'}"
+          "token_budget_cap": null,
+          "domain": "code_quality_analysis"
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065540+00:00",
+      "timestamp": "2026-05-05T18:32:08.172124+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -312,7 +301,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065550+00:00",
+      "timestamp": "2026-05-05T18:32:08.172130+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -321,227 +310,128 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065570+00:00",
+      "timestamp": "2026-05-05T18:32:08.172140+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "57d801f009b93925",
-        "token_count": 154,
+        "prompt_hash": "8d2c475138f973fd",
+        "token_count": 248,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065624+00:00",
+      "timestamp": "2026-05-05T18:32:08.172176+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "359cf51cc58bffee",
-        "token_count": 95,
+        "prompt_hash": "31d5ecb3d4c6a460",
+        "token_count": 682,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065649+00:00",
+      "timestamp": "2026-05-05T18:32:08.172189+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "796109eb2e0b01c9",
-        "token_count": 101,
+        "prompt_hash": "194d9d1f22a707e5",
+        "token_count": 263,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065667+00:00",
+      "timestamp": "2026-05-05T18:32:08.172199+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "a4dd25cb663886c8",
-        "token_count": 144,
+        "prompt_hash": "e1041f500fa26301",
+        "token_count": 419,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065684+00:00",
+      "timestamp": "2026-05-05T18:32:08.172209+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "196d58ead48a09f3",
-        "token_count": 164,
+        "prompt_hash": "68eb1524fa085946",
+        "token_count": 318,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065700+00:00",
+      "timestamp": "2026-05-05T18:32:08.172218+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "562ea1a158b1e821",
-        "token_count": 137,
+        "prompt_hash": "c35136093e0eef29",
+        "token_count": 508,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065713+00:00",
+      "timestamp": "2026-05-05T18:32:08.172226+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "e2c71551a7d76098",
-        "token_count": 122,
+        "prompt_hash": "582cd3c3d9161c0c",
+        "token_count": 362,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065727+00:00",
+      "timestamp": "2026-05-05T18:32:08.172232+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "23236efc3d8048a6",
-        "token_count": 189,
+        "prompt_hash": "9a7cbd8fc4730460",
+        "token_count": 221,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065740+00:00",
+      "timestamp": "2026-05-05T18:32:08.172238+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "22e6f2b06ed5ac52",
-        "token_count": 149,
+        "prompt_hash": "6a7c14cef24165e6",
+        "token_count": 364,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065761+00:00",
+      "timestamp": "2026-05-05T18:32:08.172244+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "fa01d2aa47ef643a",
-        "token_count": 556,
+        "prompt_hash": "159b530bf3104dd6",
+        "token_count": 315,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065780+00:00",
+      "timestamp": "2026-05-05T18:32:08.172250+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "2580432da427e288",
-        "token_count": 260,
+        "prompt_hash": "46f2011a4077147e",
+        "token_count": 290,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.065820+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "811721eef9bed5a7",
-        "token_count": 192,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065873+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "5efa64009718edf4",
-        "token_count": 154,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065896+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "3e33eafe42ca709f",
-        "token_count": 236,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065917+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "7c4990de5e9bfc62",
-        "token_count": 189,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065930+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "1151dc1811a58e0e",
-        "token_count": 238,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065947+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "2479b108c0407797",
-        "token_count": 293,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065963+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "88cb5cada18c32bd",
-        "token_count": 382,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065979+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "b62bea14cc542e3f",
-        "token_count": 341,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.065997+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "653d5fc660696156",
-        "token_count": 471,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.066028+00:00",
+      "timestamp": "2026-05-05T18:32:08.172266+00:00",
       "event_type": "metric_measurement",
       "phase": "validation",
       "data": {
@@ -552,7 +442,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.066032+00:00",
+      "timestamp": "2026-05-05T18:32:08.172267+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -561,418 +451,238 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.066942+00:00",
+      "timestamp": "2026-05-05T18:32:08.172443+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.066982+00:00",
+      "timestamp": "2026-05-05T18:32:08.172475+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "12d1802036b207cf",
-        "token_count": 1009,
+        "prompt_hash": "87970907553fd9dc",
+        "token_count": 925,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067195+00:00",
+      "timestamp": "2026-05-05T18:32:08.173045+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067237+00:00",
+      "timestamp": "2026-05-05T18:32:08.173075+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "db8d2118d4dda757",
-        "token_count": 923,
+        "prompt_hash": "1fed43832cd8ede4",
+        "token_count": 1386,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067394+00:00",
+      "timestamp": "2026-05-05T18:32:08.173220+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067433+00:00",
+      "timestamp": "2026-05-05T18:32:08.173232+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "1873f5af855c23ff",
-        "token_count": 929,
+        "prompt_hash": "420e8561b3f7a237",
+        "token_count": 969,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067565+00:00",
+      "timestamp": "2026-05-05T18:32:08.173432+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067606+00:00",
+      "timestamp": "2026-05-05T18:32:08.173469+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "c36a860a6644e112",
-        "token_count": 972,
+        "prompt_hash": "595d4938d0dd874b",
+        "token_count": 1124,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067856+00:00",
+      "timestamp": "2026-05-05T18:32:08.173691+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.067899+00:00",
+      "timestamp": "2026-05-05T18:32:08.173708+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "5fd32e373932cf32",
-        "token_count": 992,
+        "prompt_hash": "5f18993a122b4bdb",
+        "token_count": 1023,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.068169+00:00",
+      "timestamp": "2026-05-05T18:32:08.174109+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.068191+00:00",
+      "timestamp": "2026-05-05T18:32:08.174148+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "1569784197cf5757",
-        "token_count": 995,
+        "prompt_hash": "6596b1d702191cd2",
+        "token_count": 1193,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.068398+00:00",
+      "timestamp": "2026-05-05T18:32:08.174331+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.068441+00:00",
+      "timestamp": "2026-05-05T18:32:08.174350+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "23aace718d8aec25",
-        "token_count": 950,
+        "prompt_hash": "14ee2b38e913c6f1",
+        "token_count": 1068,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.068774+00:00",
+      "timestamp": "2026-05-05T18:32:08.174413+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=2"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.068799+00:00",
+      "timestamp": "2026-05-05T18:32:08.174432+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "4ae08327007cbacd",
-        "token_count": 1061,
+        "prompt_hash": "58ada3e81d34ed2b",
+        "token_count": 898,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.069011+00:00",
+      "timestamp": "2026-05-05T18:32:08.174625+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=2"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.069037+00:00",
+      "timestamp": "2026-05-05T18:32:08.174656+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "a1658f35f4449ab6",
-        "token_count": 1028,
+        "prompt_hash": "b340301c0340f699",
+        "token_count": 1068,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.070171+00:00",
+      "timestamp": "2026-05-05T18:32:08.174805+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=2, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.070222+00:00",
+      "timestamp": "2026-05-05T18:32:08.174817+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "d5549cea4afb18e7",
-        "token_count": 1411,
+        "prompt_hash": "f6869379abf016fa",
+        "token_count": 1036,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.070637+00:00",
+      "timestamp": "2026-05-05T18:32:08.174926+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.070704+00:00",
+      "timestamp": "2026-05-05T18:32:08.174949+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "9844903adaff4435",
-        "token_count": 1088,
+        "prompt_hash": "81fafe3c55ff64bb",
+        "token_count": 967,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.071184+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.071216+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "0f9b9fe9dbb9a5a2",
-        "token_count": 1048,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.071545+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.071593+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "55eff6bde875e7ee",
-        "token_count": 983,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.071984+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.072018+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "f949cf1693ff64d5",
-        "token_count": 1094,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.072352+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.072405+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "fc1a9af5486b5cad",
-        "token_count": 1018,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.072817+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.072873+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "e6a3041fc04b0a4d",
-        "token_count": 1093,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.073277+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.073337+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "31412b3894caafa9",
-        "token_count": 1149,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.074194+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=1"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.074269+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "463efbaa7b0e0baf",
-        "token_count": 1219,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.074900+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.074970+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "73c1b41a618fa194",
-        "token_count": 1169,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.076128+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.076222+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "6ffe703a043d4c74",
-        "token_count": 1300,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.076257+00:00",
+      "timestamp": "2026-05-05T18:32:08.174962+00:00",
       "event_type": "metric_measurement",
       "phase": "validation",
       "data": {
-        "specialized_precision": 0.7777777777777778,
-        "specialized_recall": 0.4666666666666667,
-        "specialized_f1": 0.5833333333333334,
-        "specialized_specificity": 0.6
+        "specialized_precision": 0.7142857142857143,
+        "specialized_recall": 0.625,
+        "specialized_f1": 0.6666666666666666,
+        "specialized_specificity": 0.3333333333333333
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.076281+00:00",
+      "timestamp": "2026-05-05T18:32:08.174974+00:00",
       "event_type": "phase_result",
       "phase": "validation",
       "data": {
@@ -983,30 +693,21 @@
           "specificity": 0.0
         },
         "specialized": {
-          "precision": 0.7778,
-          "recall": 0.4667,
-          "f1": 0.5833,
-          "specificity": 0.6
+          "precision": 0.7143,
+          "recall": 0.625,
+          "f1": 0.6667,
+          "specificity": 0.3333
         },
         "delta": {
-          "precision": 0.7778,
-          "recall": 0.4667,
-          "f1": 0.5833,
-          "specificity": 0.6
+          "precision": 0.7143,
+          "recall": 0.625,
+          "f1": 0.6667,
+          "specificity": 0.3333
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.079835+00:00",
-      "event_type": "decision",
-      "phase": "validation",
-      "data": {
-        "decision": "Cross-check disagreement on smell_03: LLM flagged structure but AST metrics look clean",
-        "reasoning": "max_fn_length=18 max_nesting_depth=1"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.081524+00:00",
+      "timestamp": "2026-05-05T18:32:08.176039+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -1015,7 +716,16 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.082510+00:00",
+      "timestamp": "2026-05-05T18:32:08.176296+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Cross-check disagreement on smell_03: LLM flagged structure but AST metrics look clean",
+        "reasoning": "max_fn_length=18 max_nesting_depth=1"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T18:32:08.176729+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -1024,17 +734,17 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.084442+00:00",
+      "timestamp": "2026-05-05T18:32:08.177587+00:00",
       "event_type": "guard_failure",
       "phase": "",
       "data": {
         "transition": "validating \u2192 specialized",
         "guard": "f1_above_threshold",
-        "reason": "F1=0.583 < threshold=0.700"
+        "reason": "F1=0.667 < threshold=0.700"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.087917+00:00",
+      "timestamp": "2026-05-05T18:32:08.178374+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -1046,22 +756,25 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
+          "token_budget_cap": null,
           "domain": "code_quality_analysis",
-          "generated_fragments": "{'input_validation_gap': '\\n\\n## Input Validation Gap Pass\\n- Flag untyped input flowing into an index, arithmetic, or subscript.'}",
-          "cross_check_disagreements": "[{'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=18 max_nesting_depth=1'}, {'sample_id': 'clean_02', 'kind': 'llm_flagged_structure_but_ast_clean', 'd",
-          "validation_result": "{'baseline_verdicts': [{'sample_id': 'logic_01', 'detected': [], 'truth': ['logic'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'logic_02', 'detected': [], 'truth': ['logic'], 'clea",
+          "cross_check_disagreements": "[{'sample_id': 'clean_02', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=9 max_nesting_depth=1'}, {'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'de",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'security_02', 'detected': [], 'truth': ['security'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'smell_01', 'detected': [], 'truth': ['structur",
           "baseline_f1": 0.0,
-          "specialized_f1": 0.5833333333333334,
-          "rollback_count": 0
+          "specialized_f1": 0.6666666666666666,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.3333333333333333,
+          "rollback_count": 0,
+          "total_tokens": 18329
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.088141+00:00",
+      "timestamp": "2026-05-05T18:32:08.178521+00:00",
       "event_type": "rollback_reason",
       "phase": "",
       "data": {
-        "reason": "Validation failed: specialized_F1=0.583, baseline_F1=0.000, delta=+0.583",
+        "reason": "Validation failed: specialized_F1=0.667, baseline_F1=0.000, delta=+0.667",
         "adjustments": [
           "Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems unless a function exceeds ~20 lines or nesting depth exceeds 2.",
           "Scan harder for security patterns: the pattern scanner caught 1 case(s) the LLM missed (Use of eval() \u2014 potential code injection). Always flag eval/exec on user input, hardcoded credentials, shell=True with string formatting, SQL string concatenation, and pickle.loads of untrusted data."
@@ -1069,7 +782,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089320+00:00",
+      "timestamp": "2026-05-05T18:32:08.179154+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -1081,29 +794,32 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
+          "token_budget_cap": null,
           "domain": "code_quality_analysis",
-          "generated_fragments": "{'input_validation_gap': '\\n\\n## Input Validation Gap Pass\\n- Flag untyped input flowing into an index, arithmetic, or subscript.'}",
-          "cross_check_disagreements": "[{'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=18 max_nesting_depth=1'}, {'sample_id': 'clean_02', 'kind': 'llm_flagged_structure_but_ast_clean', 'd",
-          "validation_result": "{'baseline_verdicts': [{'sample_id': 'logic_01', 'detected': [], 'truth': ['logic'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'logic_02', 'detected': [], 'truth': ['logic'], 'clea",
+          "cross_check_disagreements": "[{'sample_id': 'clean_02', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=9 max_nesting_depth=1'}, {'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'de",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'security_02', 'detected': [], 'truth': ['security'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'smell_01', 'detected': [], 'truth': ['structur",
           "baseline_f1": 0.0,
-          "specialized_f1": 0.5833333333333334,
+          "specialized_f1": 0.6666666666666666,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.3333333333333333,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems u",
           "rollback_adjustments": "['Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems unless a function exceeds ~20 lines "
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089557+00:00",
+      "timestamp": "2026-05-05T18:32:08.198889+00:00",
       "event_type": "llm_call",
       "phase": "planning",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "73967120ade7ba20",
+        "prompt_hash": "4d451b914c72ae1b",
         "token_count": 907,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089564+00:00",
+      "timestamp": "2026-05-05T18:32:08.198899+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1112,7 +828,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089568+00:00",
+      "timestamp": "2026-05-05T18:32:08.198901+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1121,7 +837,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089571+00:00",
+      "timestamp": "2026-05-05T18:32:08.198903+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1130,7 +846,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089573+00:00",
+      "timestamp": "2026-05-05T18:32:08.198904+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1139,7 +855,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089576+00:00",
+      "timestamp": "2026-05-05T18:32:08.198906+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1148,7 +864,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089598+00:00",
+      "timestamp": "2026-05-05T18:32:08.198918+00:00",
       "event_type": "decision",
       "phase": "planning",
       "data": {
@@ -1157,7 +873,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089602+00:00",
+      "timestamp": "2026-05-05T18:32:08.198921+00:00",
       "event_type": "phase_result",
       "phase": "planning",
       "data": {
@@ -1177,34 +893,25 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089875+00:00",
+      "timestamp": "2026-05-05T18:32:08.199171+00:00",
       "event_type": "decision",
       "phase": "specialization",
       "data": {
-        "decision": "Applying 2 rollback adjustments",
+        "decision": "Applying 2 rollback adjustments (history depth=1)",
         "reasoning": "Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems unless a function exceeds ~20 lines or nesting depth exceeds 2.; Scan harder for security patterns: the pattern scanner caught 1 case(s) the LLM missed (Use of eval() \u2014 potential code injection). Always flag eval/exec on user input, hardcoded credentials, shell=True with string formatting, SQL string concatenation, and pickle.loads of untrusted data."
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089895+00:00",
-      "event_type": "decision",
-      "phase": "specialization",
-      "data": {
-        "decision": "Spliced 1 generated fragment(s) into the prompt",
-        "reasoning": "capability_generation produced: input_validation_gap"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.089900+00:00",
+      "timestamp": "2026-05-05T18:32:08.199185+00:00",
       "event_type": "decision",
       "phase": "specialization",
       "data": {
         "decision": "Composed system prompt",
-        "reasoning": "Assembled from 5 capability fragments + domain insights (706 chars) + 1 generated fragment(s)"
+        "reasoning": "Assembled from 5 capability fragments + domain insights (727 chars) + 0 generated fragment(s)"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089904+00:00",
+      "timestamp": "2026-05-05T18:32:08.199187+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1213,7 +920,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089907+00:00",
+      "timestamp": "2026-05-05T18:32:08.199189+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1222,7 +929,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089910+00:00",
+      "timestamp": "2026-05-05T18:32:08.199190+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1231,7 +938,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089912+00:00",
+      "timestamp": "2026-05-05T18:32:08.199192+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1240,7 +947,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089920+00:00",
+      "timestamp": "2026-05-05T18:32:08.199193+00:00",
       "event_type": "capability_added",
       "phase": "",
       "data": {
@@ -1249,7 +956,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089926+00:00",
+      "timestamp": "2026-05-05T18:32:08.199196+00:00",
       "event_type": "decision",
       "phase": "specialization",
       "data": {
@@ -1258,11 +965,11 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.089934+00:00",
+      "timestamp": "2026-05-05T18:32:08.199200+00:00",
       "event_type": "phase_result",
       "phase": "specialization",
       "data": {
-        "prompt_length": 3830,
+        "prompt_length": 3750,
         "pass_count": 4,
         "capabilities": [
           "structural_analysis",
@@ -1274,16 +981,16 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.091661+00:00",
+      "timestamp": "2026-05-05T18:32:08.200014+00:00",
       "event_type": "decision",
       "phase": "specialization",
       "data": {
-        "decision": "Prompt re-composed after rollback: +5/-0 lines",
-        "reasoning": "before=3261 chars, after=3830 chars; diff captured in CLI output for review"
+        "decision": "Prompt re-composed after rollback: +4/-0 lines",
+        "reasoning": "before=3160 chars, after=3750 chars; diff captured in CLI output for review"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.091745+00:00",
+      "timestamp": "2026-05-05T18:32:08.200055+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -1295,18 +1002,21 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
+          "token_budget_cap": null,
           "domain": "code_quality_analysis",
-          "generated_fragments": "{'input_validation_gap': '\\n\\n## Input Validation Gap Pass\\n- Flag untyped input flowing into an index, arithmetic, or subscript.'}",
-          "cross_check_disagreements": "[{'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=18 max_nesting_depth=1'}, {'sample_id': 'clean_02', 'kind': 'llm_flagged_structure_but_ast_clean', 'd",
-          "validation_result": "{'baseline_verdicts': [{'sample_id': 'logic_01', 'detected': [], 'truth': ['logic'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'logic_02', 'detected': [], 'truth': ['logic'], 'clea",
+          "cross_check_disagreements": "[{'sample_id': 'clean_02', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=9 max_nesting_depth=1'}, {'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'de",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'security_02', 'detected': [], 'truth': ['security'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'smell_01', 'detected': [], 'truth': ['structur",
           "baseline_f1": 0.0,
-          "specialized_f1": 0.5833333333333334,
+          "specialized_f1": 0.6666666666666666,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.3333333333333333,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems u",
           "rollback_adjustments": "['Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems unless a function exceeds ~20 lines "
         }
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.091936+00:00",
+      "timestamp": "2026-05-05T18:32:08.200134+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -1315,7 +1025,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.091945+00:00",
+      "timestamp": "2026-05-05T18:32:08.200142+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -1324,227 +1034,128 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.091959+00:00",
+      "timestamp": "2026-05-05T18:32:08.200150+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "57d801f009b93925",
-        "token_count": 154,
+        "prompt_hash": "8d2c475138f973fd",
+        "token_count": 248,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.091991+00:00",
+      "timestamp": "2026-05-05T18:32:08.200178+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "359cf51cc58bffee",
-        "token_count": 95,
+        "prompt_hash": "31d5ecb3d4c6a460",
+        "token_count": 682,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092006+00:00",
+      "timestamp": "2026-05-05T18:32:08.200187+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "796109eb2e0b01c9",
-        "token_count": 101,
+        "prompt_hash": "194d9d1f22a707e5",
+        "token_count": 263,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092019+00:00",
+      "timestamp": "2026-05-05T18:32:08.200196+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "a4dd25cb663886c8",
-        "token_count": 144,
+        "prompt_hash": "e1041f500fa26301",
+        "token_count": 419,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092032+00:00",
+      "timestamp": "2026-05-05T18:32:08.200202+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "196d58ead48a09f3",
-        "token_count": 164,
+        "prompt_hash": "68eb1524fa085946",
+        "token_count": 318,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092044+00:00",
+      "timestamp": "2026-05-05T18:32:08.200210+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "562ea1a158b1e821",
-        "token_count": 137,
+        "prompt_hash": "c35136093e0eef29",
+        "token_count": 508,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092056+00:00",
+      "timestamp": "2026-05-05T18:32:08.200217+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "e2c71551a7d76098",
-        "token_count": 122,
+        "prompt_hash": "582cd3c3d9161c0c",
+        "token_count": 362,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092067+00:00",
+      "timestamp": "2026-05-05T18:32:08.200222+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "23236efc3d8048a6",
-        "token_count": 189,
+        "prompt_hash": "9a7cbd8fc4730460",
+        "token_count": 221,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092078+00:00",
+      "timestamp": "2026-05-05T18:32:08.200228+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "22e6f2b06ed5ac52",
-        "token_count": 149,
+        "prompt_hash": "6a7c14cef24165e6",
+        "token_count": 364,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092098+00:00",
+      "timestamp": "2026-05-05T18:32:08.200233+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "fa01d2aa47ef643a",
-        "token_count": 556,
+        "prompt_hash": "159b530bf3104dd6",
+        "token_count": 315,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092110+00:00",
+      "timestamp": "2026-05-05T18:32:08.200239+00:00",
       "event_type": "llm_call",
       "phase": "validation_baseline",
       "data": {
         "model": "scripted-planner",
-        "prompt_hash": "2580432da427e288",
-        "token_count": 260,
+        "prompt_hash": "46f2011a4077147e",
+        "token_count": 290,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092123+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "811721eef9bed5a7",
-        "token_count": 192,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092134+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "5efa64009718edf4",
-        "token_count": 154,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092147+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "3e33eafe42ca709f",
-        "token_count": 236,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092158+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "7c4990de5e9bfc62",
-        "token_count": 189,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092178+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "1151dc1811a58e0e",
-        "token_count": 238,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092192+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "2479b108c0407797",
-        "token_count": 293,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092206+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "88cb5cada18c32bd",
-        "token_count": 382,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092219+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "b62bea14cc542e3f",
-        "token_count": 341,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092233+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_baseline",
-      "data": {
-        "model": "scripted-planner",
-        "prompt_hash": "653d5fc660696156",
-        "token_count": 471,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092255+00:00",
+      "timestamp": "2026-05-05T18:32:08.200249+00:00",
       "event_type": "metric_measurement",
       "phase": "validation",
       "data": {
@@ -1555,7 +1166,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092258+00:00",
+      "timestamp": "2026-05-05T18:32:08.200251+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -1564,407 +1175,227 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092620+00:00",
+      "timestamp": "2026-05-05T18:32:08.200429+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.092649+00:00",
+      "timestamp": "2026-05-05T18:32:08.200465+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "8f1d63e630479734",
-        "token_count": 1152,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092813+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092838+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "ff289623094e7ed3",
-        "token_count": 1093,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.092990+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.093016+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "05f8f87eda3d10f7",
+        "prompt_hash": "8f9b1bdfad8cf522",
         "token_count": 1098,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093149+00:00",
+      "timestamp": "2026-05-05T18:32:08.201039+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093177+00:00",
+      "timestamp": "2026-05-05T18:32:08.201119+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "345cd3f833e38647",
-        "token_count": 1144,
+        "prompt_hash": "9e97f251e32b65e2",
+        "token_count": 1533,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093424+00:00",
+      "timestamp": "2026-05-05T18:32:08.201294+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093455+00:00",
+      "timestamp": "2026-05-05T18:32:08.201318+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "82bedf3e33ee4e0b",
-        "token_count": 1161,
+        "prompt_hash": "7c120256e0d6d917",
+        "token_count": 1117,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093722+00:00",
+      "timestamp": "2026-05-05T18:32:08.201535+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093754+00:00",
+      "timestamp": "2026-05-05T18:32:08.201579+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "6b24ab8b490d9082",
-        "token_count": 1137,
+        "prompt_hash": "5d6c458812ba4d15",
+        "token_count": 1244,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093935+00:00",
+      "timestamp": "2026-05-05T18:32:08.201818+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.093969+00:00",
+      "timestamp": "2026-05-05T18:32:08.201846+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "1959ecf075c87ae5",
-        "token_count": 1118,
+        "prompt_hash": "6e2e2c314c5a5700",
+        "token_count": 1171,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.094295+00:00",
+      "timestamp": "2026-05-05T18:32:08.202358+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=2"
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.094332+00:00",
+      "timestamp": "2026-05-05T18:32:08.202415+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "b863ce306a1b18a8",
-        "token_count": 1203,
+        "prompt_hash": "4b0dce0c3c8025d5",
+        "token_count": 1341,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.094534+00:00",
+      "timestamp": "2026-05-05T18:32:08.202628+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=2"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.094573+00:00",
+      "timestamp": "2026-05-05T18:32:08.202665+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "f67f80582202f8ab",
-        "token_count": 1170,
+        "prompt_hash": "2343b72241917883",
+        "token_count": 1216,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.095666+00:00",
+      "timestamp": "2026-05-05T18:32:08.202742+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.095741+00:00",
+      "timestamp": "2026-05-05T18:32:08.202754+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "4d9077af35673479",
-        "token_count": 1553,
+        "prompt_hash": "82133650025ee5ce",
+        "token_count": 1073,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.096147+00:00",
+      "timestamp": "2026-05-05T18:32:08.202957+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.096206+00:00",
+      "timestamp": "2026-05-05T18:32:08.202992+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "aae72f5a80eedd82",
-        "token_count": 1261,
+        "prompt_hash": "95bcfc4f863f003e",
+        "token_count": 1189,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.096685+00:00",
+      "timestamp": "2026-05-05T18:32:08.203142+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=2, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.096742+00:00",
+      "timestamp": "2026-05-05T18:32:08.203163+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "7ab997ba6eae7e1f",
-        "token_count": 1191,
+        "prompt_hash": "44dd117e3bc04ed7",
+        "token_count": 1183,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.097059+00:00",
+      "timestamp": "2026-05-05T18:32:08.203315+00:00",
       "event_type": "decision",
       "phase": "validation_specialized_tools",
       "data": {
         "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.097117+00:00",
+      "timestamp": "2026-05-05T18:32:08.203393+00:00",
       "event_type": "llm_call",
       "phase": "validation_specialized",
       "data": {
         "model": "scripted-executor",
-        "prompt_hash": "5b190b87b4ac03e3",
-        "token_count": 1152,
+        "prompt_hash": "66f541f2b573b0cf",
+        "token_count": 1141,
         "temperature": 0.0
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.097503+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.097562+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "3f5e291c5e01987c",
-        "token_count": 1236,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.097887+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.097946+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "ce6a428fe9770a90",
-        "token_count": 1190,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.098358+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.098418+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "f937cc4f4d603710",
-        "token_count": 1209,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.098810+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.098876+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "fea6d30cd4017f9a",
-        "token_count": 1264,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.099700+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=1"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.099773+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "e8cfc690eb2b7a30",
-        "token_count": 1361,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.100422+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.100510+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "94002e78fe2469b9",
-        "token_count": 1311,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.101552+00:00",
-      "event_type": "decision",
-      "phase": "validation_specialized_tools",
-      "data": {
-        "decision": "Invoked analyze_structure and scan_patterns before review",
-        "reasoning": "ast=parsed, pattern_matches=0"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.101644+00:00",
-      "event_type": "llm_call",
-      "phase": "validation_specialized",
-      "data": {
-        "model": "scripted-executor",
-        "prompt_hash": "ab0423c9f65871bf",
-        "token_count": 1442,
-        "temperature": 0.0
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.101676+00:00",
+      "timestamp": "2026-05-05T18:32:08.203465+00:00",
       "event_type": "metric_measurement",
       "phase": "validation",
       "data": {
@@ -1975,7 +1406,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.101693+00:00",
+      "timestamp": "2026-05-05T18:32:08.203481+00:00",
       "event_type": "phase_result",
       "phase": "validation",
       "data": {
@@ -2000,7 +1431,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.105196+00:00",
+      "timestamp": "2026-05-05T18:32:08.204826+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -2009,16 +1440,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.105521+00:00",
-      "event_type": "decision",
-      "phase": "validation",
-      "data": {
-        "decision": "Cross-check disagreement on smell_04: LLM flagged structure but AST metrics look clean",
-        "reasoning": "max_fn_length=15 max_nesting_depth=2"
-      }
-    },
-    {
-      "timestamp": "2026-04-17T15:19:48.107862+00:00",
+      "timestamp": "2026-05-05T18:32:08.205560+00:00",
       "event_type": "decision",
       "phase": "validation",
       "data": {
@@ -2027,7 +1449,7 @@
       }
     },
     {
-      "timestamp": "2026-04-17T15:19:48.109696+00:00",
+      "timestamp": "2026-05-05T18:32:08.206519+00:00",
       "event_type": "state_transition",
       "phase": "",
       "data": {
@@ -2039,14 +1461,18 @@
           "f1_threshold": 0.7,
           "improvement_required": true,
           "max_rollback_attempts": 3,
+          "token_budget_cap": null,
           "domain": "code_quality_analysis",
-          "generated_fragments": "{'input_validation_gap': '\\n\\n## Input Validation Gap Pass\\n- Flag untyped input flowing into an index, arithmetic, or subscript.'}",
-          "cross_check_disagreements": "[{'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=18 max_nesting_depth=1'}, {'sample_id': 'smell_04', 'kind': 'llm_flagged_structure_but_ast_clean', 'd",
-          "validation_result": "{'baseline_verdicts': [{'sample_id': 'logic_01', 'detected': [], 'truth': ['logic'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'logic_02', 'detected': [], 'truth': ['logic'], 'clea",
+          "cross_check_disagreements": "[{'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=18 max_nesting_depth=1'}, {'sample_id': 'clean_03', 'kind': 'scanner_found_security_pattern_llm_misse",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'security_02', 'detected': [], 'truth': ['security'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'smell_01', 'detected': [], 'truth': ['structur",
           "baseline_f1": 0.0,
           "specialized_f1": 1.0,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 1.0,
+          "rollback_history": "[{'attempt_idx': 1, 'adjustments': ['Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems u",
           "rollback_adjustments": "['Be conservative on structural issues: the AST cross-check disagreed on 2 sample(s) where a short, shallow function was flagged. Do not report structural problems unless a function exceeds ~20 lines ",
-          "rollback_count": 1
+          "rollback_count": 1,
+          "total_tokens": 36532
         }
       }
     }

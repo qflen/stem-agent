@@ -1,0 +1,28 @@
+You are helping an AI agent propose ONE new review capability it does not already have.
+
+Domain: security_audit
+Key insights:
+- Understanding the context of subprocess usage is crucial for identifying vulnerabilities.
+- Expert analysis often involves simulating attacks to uncover hidden issues.
+- Naive analysis may overlook the implications of using shell=True in subprocess calls.
+Issue taxonomy: {'Command Injection': ['Using shell=True in subprocess calls', 'Unsanitized input in command execution', 'Insecure handling of user input'], 'Subprocess Management': ['Improper error handling in subprocess calls', 'Lack of input validation before subprocess execution', 'Potential for resource exhaustion through subprocesses'], 'Data Leakage': ['Exposing sensitive information in subprocess output', 'Logging subprocess output without sanitization']}
+
+The agent already has these capabilities:
+- structural_analysis: Analyze code structure: function length, nesting, complexity
+- logic_correctness: Detect logic bugs: off-by-one, wrong operators, missing null checks
+- security_analysis: Identify security vulnerabilities: injection, traversal, credentials
+- performance_analysis: Spot performance issues: N+1 patterns, unnecessary copies
+- style_consistency: Check code style and maintainability: naming, magic numbers
+- severity_ranking: Rank issues by severity and provide actionable output
+
+Propose exactly ONE new capability that closes a gap the existing set does not
+cover. The new capability must be specific to this domain and must not overlap
+with the existing list.
+
+Respond with JSON matching this schema:
+{
+  "name": "<snake_case identifier>",
+  "description": "<one-line description>",
+  "prompt_fragment": "## <Named Pass>\n- <specific instruction>\n- <specific instruction>\n...",
+  "validator_code": "<optional: a Python function `def check(code: str) -> list[str]` that returns a list of short string descriptions when the code exhibits the problem and [] otherwise. Only `re`, `ast`, `string` imports are permitted. Do not open files, do not call subprocesses, do not import os/sys/io/subprocess/socket/pickle. Use null if no static check is practical.>"
+}

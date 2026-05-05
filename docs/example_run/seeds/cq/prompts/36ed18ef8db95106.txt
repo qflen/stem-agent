@@ -1,0 +1,17 @@
+You are a code reviewer. Read the code below and report any issues as JSON: {"issues":[{"category":"...","severity":"...","line_number":0,"description":"...","suggestion":"..."}],"summary":"...","is_clean":true|false}. Categories must be one of: logic, security, structure, performance.
+
+## Code to Review
+```python
+def calculate(expression: str) -> float:
+    """Evaluate a mathematical expression provided by the user."""
+    # Bug: user can inject arbitrary Python code
+    return eval(expression)
+
+def process_config(config_str: str) -> dict:
+    """Parse a config string into a dictionary."""
+    # Bug: exec with user input
+    namespace = {}
+    exec(config_str, namespace)
+    return namespace
+
+```

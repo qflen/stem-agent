@@ -1,0 +1,36 @@
+You are helping an AI agent plan its specialization for code_quality_analysis.
+
+The agent has learned the following about the domain:
+- Review strategies: Static analysis for code structure and complexity, Dynamic analysis for runtime behavior and performance, Code review focusing on edge cases and potential bugs, Pattern matching for common anti-patterns and code smells
+- Issue taxonomy: {'Logic Errors': ['Null reference access', 'Incorrect assumptions about data structure', 'Improper error handling'], 'Performance Issues': ['Unnecessary data copying', 'Inefficient data structures (e.g., using lists instead of sets)', 'High time complexity operations'], 'Readability and Maintainability': ['Complex nested structures', 'Lack of clear documentation', 'Inconsistent naming conventions'], 'Best Practices Violations': ['Use of outdated language features', 'Ignoring idiomatic practices', 'Poor use of type hints']}
+- Tools/techniques: AST analysis for structural issues, Regex pattern scanning for anti-patterns, Static analysis for complexity metrics
+- Key insights: Expert analysis often involves understanding the context and intent behind code, not just surface-level issues., Recognizing idiomatic patterns in a language can help distinguish between acceptable complexity and problematic code., Performance issues may not always be apparent without considering the data size and usage patterns.
+- Tool-fit hits over probe slice: structure=1
+
+Available capabilities the agent can select (ordered by tool-fit relevance):
+- structural_analysis: Analyze code structure: function length, nesting, complexity
+- logic_correctness: Detect logic bugs: off-by-one, wrong operators, missing null checks
+- performance_analysis: Spot performance issues: N+1 patterns, unnecessary copies
+- style_consistency: Check code style and maintainability: naming, magic numbers
+- severity_ranking: Rank issues by severity and provide actionable output
+- security_analysis: Identify security vulnerabilities: injection, traversal, credentials
+
+Design a specialization plan:
+
+1. **Selected capabilities**: Which capabilities should the agent acquire?    Choose from the available list by name.
+2. **Review passes**: Design a multi-pass review pipeline. Each pass focuses    on one aspect. Suggest 3-5 passes ordered by priority.    Each pass should map to a capability name.
+3. **Evaluation criteria**: What metric thresholds should the agent meet?    Use standard metrics: f1_threshold, precision_min, recall_min.
+4. **Domain insights**: What key insights from sensing should be embedded    in the agent's system prompt? Write 2-3 sentences.
+5. **Reasoning**: Explain why this plan was chosen over alternatives.
+
+Respond with JSON:
+{
+  "selected_capabilities": ["cap1", "cap2", ...],
+  "review_passes": [
+    {"pass_name": "...", "focus_area": "...", "capability_name": "...", "priority": 1},
+    ...
+  ],
+  "evaluation_criteria": {"f1_threshold": 0.6, "precision_min": 0.5},
+  "domain_insights_for_prompt": "...",
+  "reasoning": "..."
+}

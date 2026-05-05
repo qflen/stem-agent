@@ -1,6 +1,6 @@
 """State machine governing the agent lifecycle.
 
-Transitions have guard predicates — quantitative conditions that must be
+Transitions have guard predicates; quantitative conditions that must be
 satisfied before a transition is allowed. This is not decorative: calling
 a phase out of order raises InvalidTransitionError.
 """
@@ -88,6 +88,7 @@ def _build_transition_table() -> dict[tuple[AgentState, AgentState], Transition]
             guards=[
                 ("f1_above_threshold", _guard_f1_threshold),
                 ("improvement_over_baseline", _guard_improvement),
+                ("token_budget_under_cap", _guard_token_budget),
             ],
         ),
         Transition(
@@ -114,14 +115,54 @@ def _guard_f1_threshold(ctx: dict[str, Any]) -> tuple[bool, str]:
     return passed, reason
 
 
+_F1_DELTA_MIN = 0.05
+_SPECIFICITY_REGRESSION_MAX = 0.05
+
+
 def _guard_improvement(ctx: dict[str, Any]) -> tuple[bool, str]:
-    """Guard: specialized F1 must exceed baseline F1 (no regression)."""
+    """Guard: specialized must beat baseline by ≥0.05 F1 with no major specificity drop.
+
+    The δ ≥ 0.05 floor exists because specialized prompts cost more tokens
+    than the baseline; a 0.005 F1 win is in the noise. The specificity
+    tolerance; a regression of up to 0.05 is allowed; keeps a
+    higher-recall specialization from getting blocked over a single
+    extra false positive on the adversarial clean samples, while still
+    catching a wholesale collapse in false-positive resistance.
+    """
     if not ctx.get("improvement_required", True):
         return True, "improvement check disabled"
-    specialized = ctx.get("specialized_f1", 0.0)
-    baseline = ctx.get("baseline_f1", 0.0)
-    passed = specialized > baseline
-    reason = f"specialized_F1={specialized:.3f} {'>' if passed else '≤'} baseline_F1={baseline:.3f}"
+    specialized_f1 = ctx.get("specialized_f1", 0.0)
+    baseline_f1 = ctx.get("baseline_f1", 0.0)
+    specialized_spec = ctx.get("specialized_specificity", 0.0)
+    baseline_spec = ctx.get("baseline_specificity", 0.0)
+
+    f1_delta = specialized_f1 - baseline_f1
+    f1_ok = f1_delta >= _F1_DELTA_MIN
+    spec_delta = specialized_spec - baseline_spec
+    spec_ok = spec_delta >= -_SPECIFICITY_REGRESSION_MAX
+
+    passed = f1_ok and spec_ok
+    reason = (
+        f"F1 Δ={f1_delta:+.3f} (need ≥{_F1_DELTA_MIN:+.2f}), "
+        f"specificity Δ={spec_delta:+.3f} (allowed ≥{-_SPECIFICITY_REGRESSION_MAX:+.2f})"
+    )
+    return passed, reason
+
+
+def _guard_token_budget(ctx: dict[str, Any]) -> tuple[bool, str]:
+    """Guard: total tokens spent so far must stay under the configured cap.
+
+    Disabled by default; the cap is only checked when ``token_budget_cap``
+    is set on the context (typically via ``StemAgentConfig.token_budget_cap``).
+    Reads ``total_tokens`` plumbed from the journal, so callers must keep
+    that in sync.
+    """
+    cap = ctx.get("token_budget_cap")
+    if cap is None:
+        return True, "token budget cap disabled"
+    total = ctx.get("total_tokens", 0)
+    passed = total < cap
+    reason = f"total_tokens={total} {'<' if passed else '≥'} cap={cap}"
     return passed, reason
 
 
@@ -188,7 +229,7 @@ class StateMachine:
         if transition is None:
             raise InvalidTransitionError(self._state, target)
 
-        # Evaluate all guards — every one must pass
+        # Evaluate all guards; every one must pass
         for guard_name, guard_fn in transition.guards:
             passed, reason = guard_fn(ctx)
             if not passed:

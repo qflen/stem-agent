@@ -1,0 +1,20 @@
+You are a code reviewer. Read the code below and report any issues as JSON: {"issues":[{"category":"...","severity":"...","line_number":0,"description":"...","suggestion":"..."}],"summary":"...","is_clean":true|false}. Categories must be one of: logic, security, structure, performance.
+
+## Code to Review
+```python
+def find_common_elements(lists: list[list[int]]) -> list[int]:
+    """Find elements common to all input lists."""
+    if not lists:
+        return []
+    # Bug: creates a full copy on every iteration for no reason
+    result = list(lists[0])
+    for lst in lists[1:]:
+        temp = list(result)  # Unnecessary copy
+        result = []
+        lookup = list(lst)  # Should use set for O(1) lookup
+        for item in temp:
+            if item in lookup:  # O(n) lookup instead of O(1) with set
+                result.append(item)
+    return result
+
+```

@@ -1,4 +1,4 @@
-"""JSON file storage adapter — concrete implementation of the Storage port."""
+"""JSON file storage adapter; concrete implementation of the Storage port."""
 
 from __future__ import annotations
 

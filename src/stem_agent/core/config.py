@@ -38,8 +38,16 @@ class StemAgentConfig(BaseSettings):
         default=60.0,
         description="Per-request timeout in seconds passed to the OpenAI client",
     )
+    seed: int = Field(
+        default=0,
+        description=(
+            "Seed forwarded to the OpenAI sampler and used to derive the "
+            "deterministic corpus partition. OpenAI treats seed as best-effort, "
+            "not a hard reproducibility guarantee."
+        ),
+    )
 
-    # Validation thresholds — guard predicates for state transitions
+    # Validation thresholds; guard predicates for state transitions
     f1_threshold: float = Field(
         default=0.6,
         description="Minimum F1 score for VALIDATING → SPECIALIZED transition",
@@ -51,6 +59,13 @@ class StemAgentConfig(BaseSettings):
     max_rollback_attempts: int = Field(
         default=3,
         description="Maximum VALIDATING → ROLLBACK cycles before graceful failure",
+    )
+    token_budget_cap: int | None = Field(
+        default=None,
+        description=(
+            "Optional ceiling on cumulative tokens; when set, blocks graduation if "
+            "the journal's total_tokens has already exceeded the cap. None disables."
+        ),
     )
 
     # Storage

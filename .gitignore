@@ -37,3 +37,21 @@ agent_states/
 # Build
 build/
 dist/
+
+# LaTeX intermediates — only the source .tex and rendered docs/writeup.pdf are tracked
+*.aux
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+*.out
+*.log
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+texput.log
+/writeup.aux
+/writeup.log
+/writeup.out
+/writeup.pdf

@@ -49,7 +49,7 @@ def _make_fake_response(content: str = '{"ok": true}') -> _FakeResponse:
 def _make_rate_limit_error() -> openai.RateLimitError:
     """Construct a RateLimitError without having to hit the API.
 
-    The OpenAI SDK's RateLimitError signature requires a response object —
+    The OpenAI SDK's RateLimitError signature requires a response object;
     we provide a minimal stand-in so the exception class matches.
     """
 
@@ -117,7 +117,7 @@ class TestRetryOnTransientErrors:
         with pytest.raises(openai.RateLimitError):
             adapter.generate("hello")
 
-        # Four attempts — the initial call plus three retries.
+        # Four attempts; the initial call plus three retries.
         assert adapter._client.call_count == 4
 
     def test_non_retryable_error_propagates_immediately(self) -> None:

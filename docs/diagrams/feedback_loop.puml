@@ -26,8 +26,8 @@ participant "SpecializationPhase\n(next attempt)" as SP
 V -> V : run baseline + specialized\non 20-sample corpus
 V -> X : replay each verdict
 activate X
-X -> J : DECISION — "LLM flagged structure\nbut AST metrics clean"
-X -> J : DECISION — "scanner caught eval()\nLLM missed"
+X -> J : DECISION; "LLM flagged structure\nbut AST metrics clean"
+X -> J : DECISION; "scanner caught eval()\nLLM missed"
 X --> V : disagreements[]
 deactivate X
 
@@ -44,9 +44,9 @@ deactivate D
 == Round 2: re-plan with steering ==
 V -> SP : rollback_adjustments
 activate SP
-SP -> J : DECISION — "Applying N\nrollback adjustments"
+SP -> J : DECISION; "Applying N\nrollback adjustments"
 SP -> SP : inject into\ndomain_insights
-SP -> J : DECISION — "Prompt re-composed:\n+X / -Y lines"
+SP -> J : DECISION; "Prompt re-composed:\n+X / -Y lines"
 SP --> V : new agent_config
 deactivate SP
 

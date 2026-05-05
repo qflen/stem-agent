@@ -23,10 +23,14 @@ from stem_agent.core.state_machine import (
 _PERMISSIVE_CONTEXT = {
     "specialized_f1": 1.0,
     "baseline_f1": 0.0,
+    "specialized_specificity": 1.0,
+    "baseline_specificity": 0.0,
     "f1_threshold": 0.0,
     "improvement_required": False,
     "rollback_count": 0,
     "max_rollback_attempts": 999,
+    "total_tokens": 0,
+    "token_budget_cap": None,
 }
 
 
@@ -64,7 +68,7 @@ def test_current_state_matches_last_history_entry(targets: list[AgentState]) -> 
 @given(targets=st.lists(_target_strategy, max_size=30))
 @settings(max_examples=200, suppress_health_check=[HealthCheck.function_scoped_fixture])
 def test_rollback_count_is_monotonic(targets: list[AgentState]) -> None:
-    """rollback_count only ever grows — never drops between transitions."""
+    """rollback_count only ever grows; never drops between transitions."""
     sm = StateMachine()
     prev = sm.rollback_count
     for target in targets:

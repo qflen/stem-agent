@@ -28,7 +28,7 @@ class Capability:
     from ``"generated"`` ones proposed by the agent during the
     capability_generation phase. ``validator_code``, if set, is the
     sandboxed static-analysis helper the agent proposed alongside the
-    prompt fragment — kept on the dataclass so the journal has a single
+    prompt fragment; kept on the dataclass so the journal has a single
     artefact to point at.
     """
 

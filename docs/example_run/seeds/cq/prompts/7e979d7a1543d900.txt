@@ -1,0 +1,50 @@
+You are a code reviewer. Read the code below and report any issues as JSON: {"issues":[{"category":"...","severity":"...","line_number":0,"description":"...","suggestion":"..."}],"summary":"...","is_clean":true|false}. Categories must be one of: logic, security, structure, performance.## Contextual Analysis
+- Evaluate the code for context and intent behind its implementation.
+- Identify areas where the code may be misinterpreted or misused based on its context.
+
+## Code to Review
+```python
+def process_order(order: dict, db, mailer, logger) -> dict:
+    """Process an incoming order — does EVERYTHING in one function."""
+    result = {"status": "pending"}
+    if order.get("items"):
+        total = 0
+        for item in order["items"]:
+            if item.get("quantity", 0) > 0:
+                if item.get("price") is not None:
+                    if item["price"] > 0:
+                        subtotal = item["price"] * item["quantity"]
+                        if order.get("discount_code"):
+                            discount = db.get_discount(order["discount_code"])
+                            if discount:
+                                if discount["type"] == "percent":
+                                    subtotal *= (1 - discount["value"] / 100)
+                                elif discount["type"] == "fixed":
+                                    subtotal -= discount["value"]
+                                    if subtotal < 0:
+                                        subtotal = 0
+                        total += subtotal
+                        logger.info(f"Item processed: {item['name']}")
+                    else:
+                        logger.warning(f"Negative price for {item.get('name')}")
+                        result["status"] = "error"
+                        result["message"] = "Invalid price"
+                        return result
+        result["total"] = total
+        if total > 0:
+            payment = db.charge_payment(order["payment_method"], total)
+            if payment["success"]:
+                db.save_order(order, total)
+                mailer.send_confirmation(order["email"], order, total)
+                result["status"] = "completed"
+                result["payment_id"] = payment["id"]
+            else:
+                result["status"] = "payment_failed"
+                result["message"] = payment.get("error", "Unknown error")
+        else:
+            result["status"] = "empty"
+    else:
+        result["status"] = "no_items"
+    return result
+
+```

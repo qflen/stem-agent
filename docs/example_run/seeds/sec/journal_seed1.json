@@ -1,0 +1,508 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-05-05T15:42:46.283694+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "undifferentiated",
+        "to": "sensing",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:46.284094+00:00",
+      "event_type": "decision",
+      "phase": "sensing",
+      "data": {
+        "decision": "Sensing domain: security_audit",
+        "reasoning": "probe_count=2, tool_fit=security: 1"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:56.628745+00:00",
+      "event_type": "llm_call",
+      "phase": "sensing",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "162888c584474d90",
+        "token_count": 1440,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:56.628775+00:00",
+      "event_type": "phase_result",
+      "phase": "sensing",
+      "data": {
+        "domain_name": "security_audit",
+        "strategy_count": 5,
+        "taxonomy_categories": [
+          "Command Injection",
+          "SQL Injection",
+          "Data Exposure",
+          "Authentication Flaws",
+          "Error Handling"
+        ],
+        "tool_count": 4,
+        "insight_count": 5,
+        "tool_fit": {
+          "security": 1
+        },
+        "probe_count": 2
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:58.540615+00:00",
+      "event_type": "llm_call",
+      "phase": "capability_generation",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "ef8861fb1d48dc32",
+        "token_count": 970,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:58.540646+00:00",
+      "event_type": "decision",
+      "phase": "capability_generation",
+      "data": {
+        "decision": "Proposal 'contextual_vulnerability_analysis' bypassed empirical holdout: partition too small or overlapping",
+        "reasoning": "overlapping=True holdout_size=2"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:58.540661+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "contextual_vulnerability_analysis",
+        "reason": "generated: admitted after prompt-only review"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:58.540668+00:00",
+      "event_type": "decision",
+      "phase": "capability_generation",
+      "data": {
+        "decision": "Admitted generated capability: contextual_vulnerability_analysis",
+        "reasoning": "prompt fragment=226 chars, validator=none"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:58.540675+00:00",
+      "event_type": "phase_result",
+      "phase": "capability_generation",
+      "data": {
+        "admitted": "contextual_vulnerability_analysis",
+        "origin": "generated",
+        "has_validator": false
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:42:58.541619+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "sensing",
+        "to": "differentiating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'contextual_vulnerability_analysis': '## Contextual Vulnerability Analysis\\n- Examine user input in relation to its context within the application.\\n- Identify potential vulnerabilities that static a"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.440333+00:00",
+      "event_type": "llm_call",
+      "phase": "planning",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "5c8ea788ef432273",
+        "token_count": 1455,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.440359+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.440365+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "contextual_vulnerability_analysis",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.440370+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "severity_ranking",
+        "reason": "Selected during planning for security_audit"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.440396+00:00",
+      "event_type": "decision",
+      "phase": "planning",
+      "data": {
+        "decision": "Selected 3 capabilities, 3 passes",
+        "reasoning": "This plan prioritizes capabilities that directly address the most critical security vulnerabilities while ensuring a comprehensive review process. By focusing on both static analysis and contextual understanding, the agent can effectively identify and rank vulnerabilities, leading to more robust security audits."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.440402+00:00",
+      "event_type": "phase_result",
+      "phase": "planning",
+      "data": {
+        "selected_capabilities": [
+          "security_analysis",
+          "contextual_vulnerability_analysis",
+          "severity_ranking"
+        ],
+        "pass_count": 3,
+        "evaluation_criteria": {
+          "f1_threshold": 0.6,
+          "precision_min": 0.5,
+          "recall_min": 0.5
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441005+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Spliced 1 generated fragment(s) into the prompt",
+        "reasoning": "capability_generation produced: contextual_vulnerability_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441014+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Composed system prompt",
+        "reasoning": "Assembled from 3 capability fragments + domain insights (228 chars) + 1 generated fragment(s)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441020+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "security_analysis",
+        "reason": "Wired into review pipeline: Identify security vulnerabilities: injection, traversal, credentials"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441025+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "contextual_vulnerability_analysis",
+        "reason": "Wired into review pipeline: Analyze user input context to identify nuanced security vulnerabilities."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441029+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "severity_ranking",
+        "reason": "Wired into review pipeline: Rank issues by severity and provide actionable output"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441037+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Configured 3 review passes: ['Static Code Analysis', 'Contextual Vulnerability Analysis', 'Severity Ranking']",
+        "reasoning": "Multi-pass architecture discovered during planning \u2014 each pass focuses on a specific issue category for higher precision"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441049+00:00",
+      "event_type": "phase_result",
+      "phase": "specialization",
+      "data": {
+        "prompt_length": 2368,
+        "pass_count": 3,
+        "capabilities": [
+          "security_analysis",
+          "contextual_vulnerability_analysis",
+          "severity_ranking"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441250+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "differentiating",
+        "to": "validating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'contextual_vulnerability_analysis': '## Contextual Vulnerability Analysis\\n- Examine user input in relation to its context within the application.\\n- Identify potential vulnerabilities that static a"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441467+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Starting benchmark evaluation",
+        "reasoning": "Running both baseline and specialized agents against the full benchmark corpus to compute comparative metrics"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:07.441484+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running baseline evaluation",
+        "reasoning": "Undifferentiated agent with generic prompt \u2014 this is the control"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:10.503788+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "3eb7348abdedaaa4",
+        "token_count": 350,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:12.471363+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "a0cc3fca49d613f0",
+        "token_count": 301,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:14.573319+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0839cecdfbbf7fa0",
+        "token_count": 318,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:19.374433+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "134c2b043a799378",
+        "token_count": 492,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:19.374539+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "baseline_precision": 0.4,
+        "baseline_recall": 1.0,
+        "baseline_f1": 0.5714285714285715,
+        "baseline_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:19.374548+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running specialized evaluation",
+        "reasoning": "Specialized agent with composed prompt from differentiation"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:19.374839+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:22.262292+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "1b9561dc0dc8ab71",
+        "token_count": 761,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:22.262679+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:26.041715+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "b255b40889508603",
+        "token_count": 760,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:26.042183+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:30.277429+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "09072c813f0ac3d8",
+        "token_count": 740,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:30.277861+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:35.733583+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "1415fe295bef1815",
+        "token_count": 845,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:35.733655+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "specialized_precision": 0.5,
+        "specialized_recall": 1.0,
+        "specialized_f1": 0.6666666666666666,
+        "specialized_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:35.733675+00:00",
+      "event_type": "phase_result",
+      "phase": "validation",
+      "data": {
+        "baseline": {
+          "precision": 0.4,
+          "recall": 1.0,
+          "f1": 0.5714,
+          "specificity": 0.0
+        },
+        "specialized": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6667,
+          "specificity": 0.0
+        },
+        "delta": {
+          "precision": 0.1,
+          "recall": 0.0,
+          "f1": 0.0952,
+          "specificity": 0.0
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:43:35.734639+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "validating",
+        "to": "specialized",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "security_audit",
+          "generated_fragments": "{'contextual_vulnerability_analysis': '## Contextual Vulnerability Analysis\\n- Examine user input in relation to its context within the application.\\n- Identify potential vulnerabilities that static a",
+          "cross_check_disagreements": "[]",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'sec_audit_07', 'detected': ['security'], 'truth': [], 'clean_detected': False, 'clean_truth': True}, {'sample_id': 'sec_audit_05', 'detected': ['security'], 'trut",
+          "baseline_f1": 0.5714285714285715,
+          "specialized_f1": 0.6666666666666666,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.0,
+          "rollback_count": 0,
+          "total_tokens": 8432
+        }
+      }
+    }
+  ]
+}

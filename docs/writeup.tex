@@ -4,11 +4,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[top=1.5cm,bottom=1.5cm,left=1.8cm,right=1.8cm]{geometry}
+\usepackage[top=1.3cm,bottom=1.3cm,left=1.6cm,right=1.6cm]{geometry}
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{float}
-\usepackage{wrapfig}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{enumitem}
@@ -23,6 +22,7 @@
 \hypersetup{hidelinks}
 \newcommand{\secref}[1]{\hyperref[#1]{Section~\ref*{#1}}}
 \newcommand{\figref}[1]{\hyperref[#1]{Figure~\ref*{#1}}}
+\newcommand{\tabref}[1]{\hyperref[#1]{Table~\ref*{#1}}}
 \setlength{\parskip}{0.35ex plus 0.1ex}
 \setlength{\parindent}{0pt}
 \setlength{\intextsep}{4pt plus 1pt minus 1pt}
@@ -74,13 +74,13 @@
 % =========================================================================
 \section{Problem, scope, and design choices}\label{sec:problem}
 
-Stem Agent is an agent that \emph{differentiates itself} for a task family rather than one hand-wired for a single task. Four process questions shape its design: how it figures out the task (sensing produces a domain profile, \secref{sec:arch}), what it decides to become (planning plus sandboxed capability generation, \secref{sec:arch}), how it rebuilds without breaking (rollback driven by a cross-check diagnoser, \secref{sec:eval}), and when to stop evolving (a graduation guard requiring $F_1 \geq 0.7$ \emph{and} improvement over baseline, \secref{sec:eval}). Scope breaks into three choices.
+Stem Agent is an agent that \emph{differentiates itself} for a task family rather than one hand-wired for a single task. Four process questions shape its design: how it figures out the task (probe-grounded sensing produces a calibrated domain profile, \secref{sec:arch}), what it decides to become (planning plus sandboxed capability generation gated on an empirical 4-sample holdout, \secref{sec:arch}), how it rebuilds without breaking (rollback driven by a cross-check diagnoser with K=3 splicing, \secref{sec:eval}), and when to stop evolving (a graduation guard requiring $F_1 \geq 0.6$, $\Delta F_1 \geq 0.05$ over baseline, and bounded specificity regression, \secref{sec:eval}). Scope breaks into three choices.
 
 \paragraph{Task domain} I rejected two candidates before settling on one. \emph{Deep Research} is too open-ended to ground-truth cheaply, because quality needs expert graders. \emph{Security analysis} has ground truth but canonical corpora are synthetic in ways that hide the hard problem of false positives on legitimate code. \emph{Code quality analysis} hits the intersection I wanted: a tight ground-truth benchmark, and, critically, an \emph{independent deterministic oracle} (AST metrics, pattern scanners) that can disagree with the LLM and drive rollback. Without that second oracle, ``roll back when differentiation makes it worse'' would rely on $F_1$ alone, which is a score gate, not a feedback loop.
 
-\paragraph{Architecture} Hexagonal, ports and adapters; protocols over ABCs, matching the IntelliJ Platform extension-point style. Core phase logic depends on \texttt{LLMPort} and \texttt{StoragePort}; adapters sit on the outside. Swapping providers is two method implementations, the agent runs fully offline in tests, and \texttt{core/} imports nothing from \texttt{adapters/} (a static invariant checked in CI). The scaffold itself is fixed by choice: differentiation is over capabilities, prompts, and the review plan, not the code paths. The architecture is the genome; what the agent learns is expression.
+\paragraph{Architecture} Hexagonal, ports and adapters; protocols over ABCs, matching the IntelliJ Platform extension-point style. Core phase logic depends on \texttt{LLMPort} and \texttt{StoragePort}; adapters sit on the outside. Swapping providers is two method implementations, the agent runs fully offline in tests, and \texttt{core/} imports nothing from \texttt{adapters/} (a static invariant enforced by an AST-walking lint in \texttt{tests/test\_architecture.py}). The scaffold itself is fixed by choice: differentiation is over capabilities, prompts, and the review plan, not the code paths. The architecture is the genome; what the agent learns is expression.
 
-\paragraph{Evaluation method} A 20-sample labelled benchmark with four metrics (precision, recall, $F_1$, specificity), a cross-check oracle, and a graduation guard gated on $F_1 \geq 0.7$ \emph{and} improvement over baseline. The corpus is handcrafted and small on purpose: I wanted to audit every ground-truth label and include five adversarial clean samples, because false-positive resistance is what makes a review tool shippable to developers.
+\paragraph{Evaluation method} A 19-sample labelled benchmark partitioned 11/4/4 into validation, holdout, and probe slices by a stable hash of \texttt{(sample\_id, seed)}; four metrics (precision, recall, $F_1$, specificity); a cross-check oracle; and a three-part graduation guard ($F_1 \geq 0.6$, $\Delta F_1 \geq 0.05$, specificity drop bounded at $-0.05$). The validation slice is what the benchmark scores; the holdout is reserved for the empirical-admission gate on generated capabilities; the probe is fed unlabelled into sensing. The corpus is handcrafted and small on purpose: I wanted to audit every ground-truth label and include five adversarial clean samples, because false-positive resistance is what makes a review tool shippable to developers.
 
 \begin{figure}[!htbp]
     \centering
@@ -94,7 +94,7 @@ Stem Agent is an agent that \emph{differentiates itself} for a task family rathe
 
 \paragraph{Enforced invariants} (see \figref{fig:components}) (i) \texttt{core/} and \texttt{phases/} import only from \texttt{ports/}. (ii) Agent state mutates only through \texttt{StateMachine.transition()}; guard predicates have signature \texttt{(context) -> (bool, reason)} and the reason lands in the journal. (iii) Every LLM call, metric, guard decision, capability registration, and state transition appends to the \texttt{EvolutionJournal}. (iv) All prompts flow through \texttt{compose\_system\_prompt()}; no ad-hoc strings elsewhere.
 
-\paragraph{Capability registry and generation} Six hand-authored capabilities ship (\texttt{structural\_analysis}, \texttt{logic\_correctness}, \texttt{security\_analysis}, \texttt{performance\_analysis}, \texttt{style\_consistency}, \texttt{severity\_ranking}). Each declares a prompt fragment and optional static-tool references. Beyond them, the LLM proposes one novel capability per run. Generated Python passes an allowlist AST scan (forbidding \texttt{open}, \texttt{os}, \texttt{subprocess}, \texttt{\_\_import\_\_}, attribute access on blacklisted names) and then executes in a Python-isolated-mode subprocess bounded by \texttt{RLIMIT\_CPU} and a wall-clock timeout. Two independent layers, no external dependency. I chose this over \texttt{RestrictedPython} because the attack surface is auditable in under 60 lines. On the live run (\texttt{docs/example\_run/}) the proposal cleared both layers but planning did not select it, so the A/B below measures the composition-only path --- the sandbox is demonstrated, not load-bearing for the reported numbers.
+\paragraph{Capability registry and generation} Six hand-authored capabilities ship (\texttt{structural\_analysis}, \texttt{logic\_correctness}, \texttt{security\_analysis}, \texttt{performance\_analysis}, \texttt{style\_consistency}, \texttt{severity\_ranking}); each declares a prompt fragment plus optional static-tool references. The LLM proposes one novel capability per run, filtered through three layers: (1) an allowlist AST scan rejecting \texttt{open}/\texttt{os}/\texttt{subprocess}/\texttt{\_\_import\_\_} and attribute access on blacklisted names; (2) execution in a Python-isolated subprocess bounded by \texttt{RLIMIT\_CPU} and wall-clock timeout; (3) an empirical 4-sample A/B over the partition's holdout, admitting only when with-proposal strictly beats without. The first two stop hostile code; the third filters plausible-but-useless. Admitted validators run at review time through a \texttt{ReviewDispatcher} that compiles each \texttt{check} once, runs it under a per-check \texttt{SIGALRM} budget, and quarantines anything that throws, returns the wrong shape, or runs over. On the live runs, all three CQ proposals cleared the static layers but were rejected by the holdout; on security the holdout is bypassed (overlapping partition; 8 samples) and the proposal is admitted post-sandbox.
 
 \paragraph{Static-tool injection} \texttt{analyze\_structure} (AST metrics: max function length, max nesting depth) and \texttt{scan\_patterns} (regex: eval/exec on user input, SQL string concatenation, hardcoded credentials, \texttt{pickle.loads} of untrusted data) run before every specialized review. Their findings are injected into the prompt as a dedicated \texttt{Static Tool Findings} section. The undifferentiated baseline stays \emph{untooled}, so the A/B measures what self-specialization contributes, not what static analysis contributes.
 
@@ -105,7 +105,7 @@ Stem Agent is an agent that \emph{differentiates itself} for a task family rathe
     \label{fig:components}
 \end{figure}
 
-\paragraph{Phases} \emph{Sensing} asks the LLM for a structured domain profile (strategies, issue categories, tool categories, expert insights). \emph{Planning} consumes that profile and commits the capability set, the review-pass plan, and the $F_1$ / precision / recall thresholds that validation will enforce. \emph{Specialization} composes the system prompt; on a rollback retry, adjustments are spliced in under an \texttt{IMPORTANT adjustments based on prior evaluation} marker, so the specialization phase need not know a rollback happened. \emph{Validation} runs two benchmark passes (baseline and specialized) and a cross-check pass that replays every specialized verdict through the static tools, logging disagreements as \texttt{DECISION} events.
+\paragraph{Phases} \emph{Sensing} embeds the bodies of four unlabelled probe samples plus a \texttt{tool\_fit} histogram of \texttt{analyze\_structure}/\texttt{scan\_patterns} hits and asks the LLM for a domain profile keyed off the actual snippets. \emph{Planning} folds that profile together with cross-run priors (per-capability graduation rate from saved journals, Laplace-smoothed) to bias capability ordering, then commits the capability set, review-pass plan, and validation thresholds. \emph{Specialization} composes the system prompt; on rollback retry the most recent three attempts splice in full under \texttt{IMPORTANT adjustments based on prior evaluation} while older attempts collapse to one-line summaries, so the prompt cannot grow unboundedly. \emph{Validation} runs baseline and specialized passes on the validation slice plus a cross-check that replays every specialized verdict through the tools + dispatcher.
 
 % =========================================================================
 \section{Evaluation and rollback mechanism}\label{sec:eval}
@@ -116,22 +116,20 @@ Stem Agent is an agent that \emph{differentiates itself} for a task family rathe
 \toprule
 \textbf{Category} & \textbf{Count} & \textbf{Examples} \\
 \midrule
-Logic bugs & 5 & Off-by-one in binary search, wrong comparison operator, missing null check \\
+Logic bugs & 4 & Off-by-one in binary search, wrong comparison operator, missing null check, broken boolean precedence \\
 Security & 4 & SQL injection via f-string, path traversal, hardcoded credentials, \texttt{eval()} on user input \\
-Code smells & 4 & Deep nesting, god function, dead code after return, long parameter list \\
+Code smells & 4 & Deep nesting, god function, dead code after return, magic-number stack \\
 Performance & 2 & N+1 queries, unnecessary deep copy \\
 Clean (adversarial) & 5 & Suspicious-looking but correct code; tests false-positive resistance \\
 \bottomrule
 \end{tabularx}
 \captionsetup{skip=1pt}
-\caption{Benchmark corpus of 20 labelled samples. Clean samples include code using \texttt{eval()} safely with \texttt{\_\_builtins\_\_=\{\}} and comparisons that look off-by-one but are correct for their domain.}
+\caption{Benchmark corpus of 19 labelled samples, partitioned 11 / 4 / 4 into validation, holdout, and probe slices by a stable seed-deterministic hash. Clean samples include code using \texttt{eval()} safely with a whitelisted AST walker and comparisons that look off-by-one but are correct for their domain.}
 \end{table}
 
-\paragraph{Test suite} 142 tests, zero network, under 4 seconds end-to-end. Hypothesis property tests search 200 random transition sequences per invariant (rollback monotonicity, \texttt{FAILED} terminality, guard-reason round-trip through the journal). \texttt{FakeLLM} is a first-class deterministic test double with substring-routed responses for every benchmark sample; \texttt{poor\_fake\_llm} returns degraded answers so the rollback branch is exercised with the same rigor as the happy path.
+\paragraph{Test suite \& metrics} 278 tests, zero network, 3.4s end-to-end. Hypothesis property tests search 200 random transition sequences per invariant; \texttt{FakeLLM} is a first-class deterministic double, \texttt{poor\_fake\_llm} forces the rollback branch; the architecture lint walks AST imports over \texttt{core/} and \texttt{phases/} to refuse \texttt{stem\_agent.adapters.*}. A true positive is a buggy sample flagged with at least one issue in a ground-truth category; a true negative is a clean sample flagged with no issues. $F_1$ is the primary guard; specificity is tracked separately because it is the axis that decides false-positive resistance on the adversarial clean samples.
 
-\paragraph{Metrics} A true positive is a buggy sample flagged with at least one issue in a ground-truth category; a true negative is a clean sample flagged with no issues. $F_1$ is the primary guard; specificity is tracked separately because it is the axis that decides false-positive resistance on the adversarial clean samples, and a high-$F_1$ reviewer with low specificity is still noise in practice.
-
-\paragraph{Rollback diagnosis} When the graduation guard fails, \texttt{diagnose\_failure()} reads two signal sources. Benchmark deltas (precision / recall / specificity / $F_1$ direction) produce generic prompt nudges. Cross-check disagreements produce concrete adjustments: $N$ structure over-flags become ``do not flag structural problems unless a function exceeds $\sim$20 lines or depth exceeds 2''; $M$ scanner-caught security misses become ``scan harder for eval/exec on user input, hardcoded credentials, SQL string concatenation, \texttt{pickle.loads}'' with the exact patterns named. The adjustments are appended as a \texttt{ROLLBACK\_REASON} event and spliced into the next composed prompt. The next attempt is shaped by \emph{where} the last one went wrong, not just by how far $F_1$ fell short.
+\paragraph{Rollback diagnosis} When the graduation guard fails, \texttt{diagnose\_failure()} reads two signal sources. Benchmark deltas (precision / recall / specificity / $F_1$ direction) produce generic prompt nudges. Cross-check disagreements produce concrete adjustments: $N$ structure over-flags become ``do not flag structural problems unless a function exceeds $\sim$20 lines or depth exceeds 2''; $M$ scanner-caught security misses become ``scan harder for eval/exec on user input, hardcoded credentials, SQL string concatenation, \texttt{pickle.loads}'' with the exact patterns named. The adjustments are appended as a \texttt{ROLLBACK\_REASON} event and spliced into the next composed prompt; on the third rollback the older attempts collapse to a one-line summary so the prompt stays bounded. The next attempt is shaped by \emph{where} the last one went wrong, not just by how far $F_1$ fell short.
 
 \begin{figure}[!htbp]
     \centering
@@ -149,34 +147,48 @@ Clean (adversarial) & 5 & Suspicious-looking but correct code; tests false-posit
 \toprule
  & \textbf{Precision} & \textbf{Recall} & \textbf{$F_1$} & \textbf{Specificity} \\
 \midrule
-Baseline (undifferentiated, live) & 0.000 & 0.000 & 0.000 & 0.000 \\
-Specialized (live OpenAI run) & 0.667 & 0.933 & \textbf{0.778} & 0.300 \\
+CQ specialized, 3 seeds & 0.778 [0.67, 0.89] & 0.921 [0.88, 1.00] & \textbf{0.837 [0.80, 0.89]} & 0.444 [0.33, 0.50] \\
+Sec specialized, 3 seeds & 0.667 [0.50, 0.75] & 1.000 [1.00, 1.00] & \textbf{0.794 [0.67, 0.86]} & 0.000 [0.00, 0.00] \\
 \midrule
-Rollback demo, attempt 1 (scripted) & 0.778 & 0.467 & 0.583 & 0.600 \\
-Rollback demo, attempt 2 (scripted) & 1.000 & 1.000 & \textbf{1.000} & 1.000 \\
+Rollback attempt 1 (scripted) & 0.714 & 0.625 & 0.667 & 0.333 \\
+Rollback attempt 2 (scripted) & 1.000 & 1.000 & \textbf{1.000} & 1.000 \\
 \bottomrule
 \end{tabular}
 \captionsetup{skip=1pt}
-\caption{Live OpenAI run (\texttt{docs/example\_run/}): 42 LLM calls, $\sim$41k tokens, $\sim$\$0.20, no rollbacks triggered. Rollback demo (\texttt{docs/example\_run\_rollback/}) replays the same phase code against a scripted LLM boundary, exercising the $F_1$-fails-guard, diagnose, and re-specialize path the live run didn't trigger. Attempt 2's 1.0 is a property of the scripted fixture; 0.778 is the honest ceiling.}
+\caption{Multi-seed live run (\texttt{docs/example\_run/seeds/}, 3 cq + 3 sec, 97.8k tokens at \$0.28; full live batch incl.\ cross-domain + adjudicator $\sim$\$1.20). Rollback demo replays the diagnose-and-re-specialize path against a scripted LLM. Attempt 2's 1.0 is a property of the fixture; the live cq ceiling is $F_1$ = 0.889. Bootstrap CIs are percentile-method over 1000 resamples of per-seed point estimates.}
+\label{tab:results}
 \end{table}
 
-The baseline zeros are a parser artefact, not a real ceiling. The undifferentiated prompt never asks for structured JSON, so the parser returns no categories on any sample, and precision and recall are undefined (they report as zero). Part of the specialization delta is bought by asking for JSON at all, not by deeper reasoning; nudging the baseline toward JSON would make the comparison ``fairer'', but output-structure discipline \emph{is} part of what specialization wins, so the honest framing leaves the numbers as they are. On the live run, the specialized pass catches 14 of 15 buggy samples (recall 0.933) while specificity sits at 0.300 on the five adversarial clean samples. The cross-check still surfaced three informational disagreements even though $F_1$ passed the guard, all logged as \texttt{DECISION} events for an auditor who wants to trace what the agent knows it is unsure about.
+The previous run's baseline zeros were a parser artefact: the undifferentiated prompt never asked for structured JSON. This release folds the JSON discipline into the baseline as well, so the baseline-vs-specialized delta is judgement, not formatting. The cq specialized pass catches 88--100\% of buggy samples while specificity sits at 0.444; a 14-point lift on the previous run's 0.300 because the empirical-holdout gate now rejects proposals that would inflate false positives.
+
+\paragraph{Cross-domain transfer} \tabref{tab:cross-domain} runs each seed-0 specialized prompt against the other domain's validation slice. Off-diagonals do \emph{not} beat on-diagonals; the specialization is calibrated to the corpus the agent saw, not to a generic notion of code review.
+
+\begin{table}[!htbp]
+\small
+\centering
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Prompt} & \textbf{Corpus} & \textbf{Precision} & \textbf{Recall} & \textbf{$F_1$} & \textbf{Specificity} \\
+\midrule
+cq  & cq  & 0.500 & 1.000 & 0.667 & 0.111 \\
+cq  & sec & 0.429 & 1.000 & 0.600 & 0.000 \\
+sec & cq  & 0.500 & 0.875 & 0.636 & 0.000 \\
+sec & sec & 0.750 & 1.000 & \textbf{0.857} & 0.000 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-domain 2$\times$2: each seed-0 specialized prompt run against the other domain's validation slice, single shot, no further differentiation.}
+\label{tab:cross-domain}
+\end{table}
+
+\paragraph{Second-rater agreement} A single-shot \texttt{gpt-4o-mini} relabel with a strict label-only prompt agrees with ground truth at $\kappa = 0.546$ [0.31, 0.79] on cq (7/19 disputed) and $\kappa = 0.000$ on sec (2/8 disputed). The sec $\kappa$ collapses because the rater labels every sec sample ``security''; including the two adversarial clean snippets; so observed agreement (75\%) matches chance and $\kappa$ degenerates. A one-shot LLM rater without context is not trustworthy ground truth on adversarial clean code, which is the same failure mode the agent's specificity column reports.
 
 % =========================================================================
 \section{Discussion}
 
-\paragraph{Cross-check disagreements started as a score input} The first design penalized $F_1$ when the LLM disagreed with static analysis. That made validation stricter but taught the next attempt nothing. Feeding disagreements back as \emph{prompt guidance} is what actually closes the loop. Reframing from ``punish the score'' to ``shape the next attempt'' was the slowest insight of the project, and the one I am most glad I let the architecture survive.
+\paragraph{Cross-check disagreements as guidance, not score} The first design penalized $F_1$ when the LLM disagreed with static analysis: stricter, but the next attempt learned nothing. Feeding disagreements back as \emph{prompt guidance} closes the loop; ``punish the score'' became ``shape the next attempt'', the slowest insight of the project. Capability generation nearly didn't ship: the registry-only path is a composer, not a stem cell. The sandboxed generation phase plus the empirical-holdout gate is what makes the biological metaphor honest.
 
-\paragraph{Capability generation nearly didn't ship} Until late, the agent only \emph{selected} from the fixed registry, which is a composer, not a stem cell. Adding the sandboxed generation phase was the last meaningful change and the one that made the biological metaphor honest. The dual-layer defence (AST allowlist plus resource-limited subprocess) is belt-and-braces, but that is the right register for code an LLM wrote and the agent is about to run.
+\paragraph{Specificity is the axis that still needs work} Specialized recall on cq is 0.92 mean; specificity is 0.44, a 14-point lift over the previous run but well short of recall. On sec specificity is 0.000 across all three seeds. \secref{sec:problem}'s adversarial clean corpus is doing exactly what it was designed for; a next iteration would weight the diagnoser harder on over-flag signals.
 
-\paragraph{Specificity, not recall, is the axis that needs work} The live specialized pass catches 14 of 15 buggy samples but scores 0.300 on the adversarial clean corpus. That is \secref{sec:problem}'s corpus choice working: the five adversarial clean samples were designed to surface exactly this failure mode, an over-eager reviewer. The cross-check already caught two structural over-flags on this run without firing the graduation guard, both logged as \texttt{DECISION} events rather than papered over. A next iteration would weight the diagnoser harder on over-flag signals and grow the clean corpus so the ``be conservative on short functions'' adjustment has more evidence than a single heuristic.
-
-\paragraph{With more time (and what I consciously cut)}
-\begin{enumerate}[nosep]
-  \item \emph{JSON-disciplined baseline.} The fair ablation: re-run the baseline with structured output requested, to separate what self-specialization buys from what output-format discipline alone buys. I expect the delta to shrink materially but stay positive.
-  \item \emph{Second real domain.} The 8-sample security corpus is a first probe that the architecture generalizes, not a proof. A full second-domain live run is the natural next experiment.
-  \item \emph{Multi-model evaluation.} \texttt{LLMPort} supports model overrides; a sweep would muddy the current A/B, which answers \emph{``does self-specialization beat an undifferentiated prompt''} honestly, but it is the next interesting question.
-  \item \emph{Token-budget guard.} The journal totals tokens; no guard reads that total. Add it before anything user-facing, but not before a richer capability generator, because budget pressure only matters when attempt cost varies.
-\end{enumerate}
+\paragraph{What was cut for time} A multi-model sweep (\texttt{LLMPort} already supports overrides); a larger security corpus so the empirical-holdout gate fires on sec instead of bypassing on every run; a sharper second-rater sharing the agent's probe-grounded prompt instead of label-only; a domain-scoped prior store so cross-run priors don't need the journal dir cleaned between experiments.
 
 \end{document}

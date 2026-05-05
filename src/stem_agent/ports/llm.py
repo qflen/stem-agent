@@ -1,4 +1,4 @@
-"""LLM port — the protocol that any language model adapter must satisfy."""
+"""LLM port; the protocol that any language model adapter must satisfy."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ class LLMPort(Protocol):
     """Structural interface for language model interactions.
 
     Uses Protocol (structural subtyping) over ABC (nominal subtyping)
-    because any object with matching methods satisfies the contract —
+    because any object with matching methods satisfies the contract;
     no inheritance required. This mirrors the extension-point philosophy:
     the core depends on shape, not lineage.
 

@@ -1,0 +1,754 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-05-05T15:36:16.324736+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "undifferentiated",
+        "to": "sensing",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "code_quality_analysis"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:36:16.329339+00:00",
+      "event_type": "decision",
+      "phase": "sensing",
+      "data": {
+        "decision": "Sensing domain: code_quality_analysis",
+        "reasoning": "probe_count=4, tool_fit=structure: 1"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:36:25.184533+00:00",
+      "event_type": "llm_call",
+      "phase": "sensing",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "5d2644a11adb5ec8",
+        "token_count": 1785,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:36:25.184574+00:00",
+      "event_type": "phase_result",
+      "phase": "sensing",
+      "data": {
+        "domain_name": "code_quality_analysis",
+        "strategy_count": 4,
+        "taxonomy_categories": [
+          "Logic Errors",
+          "Performance Issues",
+          "Readability and Maintainability",
+          "Best Practices Violations"
+        ],
+        "tool_count": 3,
+        "insight_count": 3,
+        "tool_fit": {
+          "structure": 1
+        },
+        "probe_count": 4
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:36:27.122978+00:00",
+      "event_type": "llm_call",
+      "phase": "capability_generation",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "09d482f2473cb619",
+        "token_count": 905,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:23.032814+00:00",
+      "event_type": "phase_result",
+      "phase": "capability_generation",
+      "data": {
+        "holdout_outcome": "rejected_by_holdout",
+        "holdout_size": 4,
+        "arm_with_proposal_correct": 0,
+        "arm_without_proposal_correct": 0,
+        "proposal_name": "contextual_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:23.032836+00:00",
+      "event_type": "decision",
+      "phase": "capability_generation",
+      "data": {
+        "decision": "Proposal 'contextual_analysis' rejected by empirical holdout",
+        "reasoning": "arm_a=0 \u2264 arm_b=0 on 4"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:23.033144+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "sensing",
+        "to": "differentiating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "code_quality_analysis"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695327+00:00",
+      "event_type": "llm_call",
+      "phase": "planning",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "f822f7fdf3369617",
+        "token_count": 1479,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695350+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "structural_analysis",
+        "reason": "Selected during planning for code_quality_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695355+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "logic_correctness",
+        "reason": "Selected during planning for code_quality_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695359+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "performance_analysis",
+        "reason": "Selected during planning for code_quality_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695362+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "style_consistency",
+        "reason": "Selected during planning for code_quality_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695365+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "severity_ranking",
+        "reason": "Selected during planning for code_quality_analysis"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695388+00:00",
+      "event_type": "decision",
+      "phase": "planning",
+      "data": {
+        "decision": "Selected 5 capabilities, 5 passes",
+        "reasoning": "This plan prioritizes structural analysis first, as it aligns with the agent's strongest tool-fit. Following this, logic correctness and performance analysis are crucial for identifying critical issues. Style consistency and severity ranking ensure that the output is actionable and maintains code quality standards."
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695394+00:00",
+      "event_type": "phase_result",
+      "phase": "planning",
+      "data": {
+        "selected_capabilities": [
+          "structural_analysis",
+          "logic_correctness",
+          "performance_analysis",
+          "style_consistency",
+          "severity_ranking"
+        ],
+        "pass_count": 5,
+        "evaluation_criteria": {
+          "f1_threshold": 0.6,
+          "precision_min": 0.5,
+          "recall_min": 0.5
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695865+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Composed system prompt",
+        "reasoning": "Assembled from 5 capability fragments + domain insights (209 chars) + 0 generated fragment(s)"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695873+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "structural_analysis",
+        "reason": "Wired into review pipeline: Analyze code structure: function length, nesting, complexity"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695876+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "logic_correctness",
+        "reason": "Wired into review pipeline: Detect logic bugs: off-by-one, wrong operators, missing null checks"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695879+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "performance_analysis",
+        "reason": "Wired into review pipeline: Spot performance issues: N+1 patterns, unnecessary copies"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695882+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "style_consistency",
+        "reason": "Wired into review pipeline: Check code style and maintainability: naming, magic numbers"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695885+00:00",
+      "event_type": "capability_added",
+      "phase": "",
+      "data": {
+        "capability": "severity_ranking",
+        "reason": "Wired into review pipeline: Rank issues by severity and provide actionable output"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695892+00:00",
+      "event_type": "decision",
+      "phase": "specialization",
+      "data": {
+        "decision": "Configured 5 review passes: ['Structural Analysis Pass', 'Logic Correctness Pass', 'Performance Analysis Pass', 'Style Consistency Pass', 'Severity Ranking Pass']",
+        "reasoning": "Multi-pass architecture discovered during planning \u2014 each pass focuses on a specific issue category for higher precision"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.695902+00:00",
+      "event_type": "phase_result",
+      "phase": "specialization",
+      "data": {
+        "prompt_length": 2687,
+        "pass_count": 5,
+        "capabilities": [
+          "structural_analysis",
+          "logic_correctness",
+          "performance_analysis",
+          "style_consistency",
+          "severity_ranking"
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.696048+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "differentiating",
+        "to": "validating",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "code_quality_analysis"
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.696202+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Starting benchmark evaluation",
+        "reasoning": "Running both baseline and specialized agents against the full benchmark corpus to compute comparative metrics"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:30.696216+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running baseline evaluation",
+        "reasoning": "Undifferentiated agent with generic prompt \u2014 this is the control"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:34.149375+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "582cd3c3d9161c0c",
+        "token_count": 573,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:37.930372+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "68eb1524fa085946",
+        "token_count": 543,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:41.461844+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "6a142b81dedbad09",
+        "token_count": 452,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:44.978899+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "b8498e35a0791409",
+        "token_count": 642,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:47.094530+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "46f2011a4077147e",
+        "token_count": 397,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:49.340165+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "7c2c60cdea963a29",
+        "token_count": 415,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:53.344372+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "194d9d1f22a707e5",
+        "token_count": 491,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:55.696364+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "8d2c475138f973fd",
+        "token_count": 369,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:37:57.657899+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "9a7cbd8fc4730460",
+        "token_count": 341,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:00.721354+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "c35136093e0eef29",
+        "token_count": 694,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:03.774899+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_baseline",
+      "data": {
+        "model": "gpt-4o-mini",
+        "prompt_hash": "0c00e0ead797da3f",
+        "token_count": 506,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:03.775035+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "baseline_precision": 0.4375,
+        "baseline_recall": 0.7777777777777778,
+        "baseline_f1": 0.56,
+        "baseline_specificity": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:03.775044+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Running specialized evaluation",
+        "reasoning": "Specialized agent with composed prompt from differentiation"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:03.775643+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:05.423807+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "2ff7f3df7e21553b",
+        "token_count": 972,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:05.424546+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:06.571064+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "c007189282878938",
+        "token_count": 909,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:06.571966+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=2, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:08.964628+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "3f7604bf48e312b4",
+        "token_count": 973,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:08.965308+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:09.975115+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "e6321305b2952913",
+        "token_count": 952,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:09.975946+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:11.760583+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "1e9a355c7771bb54",
+        "token_count": 901,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:11.761332+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:13.493885+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "4b33c63f642ba65d",
+        "token_count": 898,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:13.494122+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:14.743727+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "da52b8c6fbb56b72",
+        "token_count": 874,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:14.744139+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:19.157352+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "670651e899c4563b",
+        "token_count": 862,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:19.157669+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:20.450376+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "cd9542fa376ffc5c",
+        "token_count": 853,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:20.451740+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=1, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:22.567891+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "0b7ae36cf38f8068",
+        "token_count": 1146,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:22.568461+00:00",
+      "event_type": "decision",
+      "phase": "validation_specialized_tools",
+      "data": {
+        "decision": "Invoked analyze_structure and scan_patterns before review",
+        "reasoning": "ast=parsed, pattern_matches=0, dispatcher_findings=0"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:23.547386+00:00",
+      "event_type": "llm_call",
+      "phase": "validation_specialized",
+      "data": {
+        "model": "gpt-4o",
+        "prompt_hash": "bb4750e9ac8751fe",
+        "token_count": 838,
+        "temperature": 0.0
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:23.547430+00:00",
+      "event_type": "metric_measurement",
+      "phase": "validation",
+      "data": {
+        "specialized_precision": 0.8888888888888888,
+        "specialized_recall": 0.8888888888888888,
+        "specialized_f1": 0.8888888888888888,
+        "specialized_specificity": 0.5
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:23.547446+00:00",
+      "event_type": "phase_result",
+      "phase": "validation",
+      "data": {
+        "baseline": {
+          "precision": 0.4375,
+          "recall": 0.7778,
+          "f1": 0.56,
+          "specificity": 0.0
+        },
+        "specialized": {
+          "precision": 0.8889,
+          "recall": 0.8889,
+          "f1": 0.8889,
+          "specificity": 0.5
+        },
+        "delta": {
+          "precision": 0.4514,
+          "recall": 0.1111,
+          "f1": 0.3289,
+          "specificity": 0.5
+        }
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:23.547979+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Cross-check disagreement on smell_03: LLM flagged structure but AST metrics look clean",
+        "reasoning": "max_fn_length=18 max_nesting_depth=1"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:23.549642+00:00",
+      "event_type": "decision",
+      "phase": "validation",
+      "data": {
+        "decision": "Cross-check disagreement on clean_03: pattern scanner caught a security issue the LLM missed",
+        "reasoning": "Use of eval() \u2014 potential code injection"
+      }
+    },
+    {
+      "timestamp": "2026-05-05T15:38:23.550083+00:00",
+      "event_type": "state_transition",
+      "phase": "",
+      "data": {
+        "from": "validating",
+        "to": "specialized",
+        "context": {
+          "planning_model": "gpt-4o-mini",
+          "execution_model": "gpt-4o",
+          "f1_threshold": 0.6,
+          "improvement_required": true,
+          "max_rollback_attempts": 3,
+          "token_budget_cap": null,
+          "domain": "code_quality_analysis",
+          "cross_check_disagreements": "[{'sample_id': 'smell_03', 'kind': 'llm_flagged_structure_but_ast_clean', 'detail': 'max_fn_length=18 max_nesting_depth=1'}, {'sample_id': 'clean_03', 'kind': 'scanner_found_security_pattern_llm_misse",
+          "validation_result": "{'baseline_verdicts': [{'sample_id': 'perf_01', 'detected': ['logic', 'structure'], 'truth': ['performance'], 'clean_detected': False, 'clean_truth': False}, {'sample_id': 'smell_03', 'detected': ['lo",
+          "baseline_f1": 0.56,
+          "specialized_f1": 0.8888888888888888,
+          "baseline_specificity": 0.0,
+          "specialized_specificity": 0.5,
+          "rollback_count": 0,
+          "total_tokens": 19770
+        }
+      }
+    }
+  ]
+}

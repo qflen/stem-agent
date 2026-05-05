@@ -1,4 +1,4 @@
-"""OpenAI adapter — concrete implementation of the LLM port."""
+"""OpenAI adapter; concrete implementation of the LLM port."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 # Exponential backoff: 1s → 2s → 4s → 8s between the four attempts. Four
-# attempts is a sweet spot for OpenAI rate-limit bursts — any longer and
+# attempts is a sweet spot for OpenAI rate-limit bursts; any longer and
 # the user gives up waiting, any shorter and a transient 429 kills a run.
 _RETRY_DELAYS = (1.0, 2.0, 4.0, 8.0)
 
@@ -54,7 +54,7 @@ def _with_retry(func: Callable[..., T]) -> Callable[..., T]:
                 if attempt == len(_RETRY_DELAYS):
                     break
                 logger.warning(
-                    "OpenAI call failed (attempt %d/%d): %s — retrying in %.1fs",
+                    "OpenAI call failed (attempt %d/%d): %s; retrying in %.1fs",
                     attempt,
                     len(_RETRY_DELAYS),
                     exc,
@@ -70,7 +70,7 @@ def _with_retry(func: Callable[..., T]) -> Callable[..., T]:
 class OpenAIAdapter:
     """LLM adapter backed by the OpenAI API.
 
-    Satisfies LLMPort via structural subtyping — no inheritance needed.
+    Satisfies LLMPort via structural subtyping; no inheritance needed.
     Calls are wrapped in a small exponential-backoff retry for
     ``RateLimitError``, ``APITimeoutError`` and ``APIConnectionError``;
     other errors propagate immediately so callers see real failures fast.
@@ -116,6 +116,7 @@ class OpenAIAdapter:
             model=model or self._config.planning_model,
             messages=[{"role": "user", "content": prompt}],
             temperature=self._config.temperature,
+            seed=self._config.seed,
         )
         self._record_usage(response)
         return response.choices[0].message.content or ""
@@ -149,6 +150,7 @@ class OpenAIAdapter:
             messages=[{"role": "user", "content": structured_prompt}],
             temperature=self._config.temperature,
             response_format={"type": "json_object"},
+            seed=self._config.seed,
         )
         self._record_usage(response)
 

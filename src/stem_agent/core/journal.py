@@ -1,4 +1,4 @@
-"""Evolution journal — append-only structured event log.
+"""Evolution journal; append-only structured event log.
 
 The journal is the agent's self-model: every state transition, LLM call,
 metric measurement, and rollback reason is recorded. During rollback,
@@ -52,7 +52,7 @@ class JournalEvent(BaseModel):
     data: dict[str, Any] = Field(default_factory=dict)
 
     def model_post_init(self, _context: Any) -> None:
-        """Freeze after creation — events are append-only."""
+        """Freeze after creation; events are append-only."""
 
 
 class EvolutionJournal:
@@ -74,7 +74,7 @@ class EvolutionJournal:
         return len(self._events)
 
     def _append(self, event: JournalEvent) -> None:
-        """Append an event. Internal — all public methods delegate here."""
+        """Append an event. Internal; all public methods delegate here."""
         self._events.append(event)
 
     def log_transition(

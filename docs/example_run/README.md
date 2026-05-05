@@ -1,12 +1,11 @@
-# Example differentiation run (live OpenAI)
+# Single-seed live run (historical reference)
 
-A real run against the OpenAI API, captured so reviewers do not have to
-spend tokens to see the pipeline work end-to-end. The full journal is
-checked in next to this file as `journal.json`.
-
-For a controlled, zero-cost demonstration of the rollback feedback loop
-(cross-check → diagnose → re-specialize), see
-[`../example_run_rollback/`](../example_run_rollback/).
+> **The current evaluation lives in [`seeds/`](./seeds/).** This file
+> describes a pre-multi-seed run that's kept for context. The
+> headline numbers in the writeup come from `seeds/cq/` and
+> `seeds/sec/`, three seeds per domain with bootstrap CIs. For the
+> rollback feedback loop, see
+> [`../example_run_rollback/`](../example_run_rollback/).
 
 ## Run metadata
 
@@ -45,12 +44,12 @@ For a controlled, zero-cost demonstration of the rollback feedback loop
 | Specificity | 0.000 | 0.300 | +0.300 |
 
 The baseline score is zero because the undifferentiated prompt does not
-ask for structured JSON — the parser falls back to an empty category
+ask for structured JSON; the parser falls back to an empty category
 set for every sample, so precision and recall are both undefined and
 report as 0. That is the signal the differentiation pipeline is there
 to fix, and the delta above is what it actually buys you. The specialized
 run picks up 14 of 15 buggy samples (recall 0.933) while keeping
-false-positive rate manageable (specificity 0.300 — the 5 clean
+false-positive rate manageable (specificity 0.300; the 5 clean
 adversarial samples are the expensive ones).
 
 ## Phase-by-phase narrative
@@ -65,7 +64,7 @@ Taken straight from `journal.json`, not a summary:
    proposed one novel capability on top of the six hand-authored ones.
    On this run the sandbox admitted it (`ast_scan` clean, subprocess
    smoke-test passed) but it did not survive prompt composition because
-   the planning phase did not select it — the A/B is therefore against
+   the planning phase did not select it; the A/B is therefore against
    the registered capability set, not a drifted one.
 3. **Planning** (1 LLM call, 1,546 tokens). Selected 6 capabilities
    (`structural_analysis`, `logic_correctness`, `security_analysis`,
@@ -75,13 +74,13 @@ Taken straight from `journal.json`, not a summary:
 4. **Specialization**. Composed a 3,178-character system prompt from
    the capability fragments plus domain insights. 12 `CAPABILITY_ADDED`
    events logged (each capability is recorded both when planning picks
-   it and when specialization wires it into the pipeline — the audit
+   it and when specialization wires it into the pipeline; the audit
    trail has both sides of the decision).
 5. **Validation**. 40 reviews, 20 baseline + 20 specialized. Every
    review is an `LLM_CALL` event with model, prompt hash, and token
    count. Metrics logged as two `METRIC_MEASUREMENT` events (baseline
    and specialized). Comparison logged as a `PHASE_RESULT`.
-6. **Cross-check**. Three disagreements surfaced (see below) — logged
+6. **Cross-check**. Three disagreements surfaced (see below); logged
    as `DECISION` events. F1 passed both guards, so graduation to
    `SPECIALIZED` succeeded without consuming rollback budget.
 
@@ -94,9 +93,9 @@ rollback diagnoser would have consumed if F1 had fallen short:
 
 | Sample | Disagreement | Evidence |
 |---|---|---|
-| `smell_03` | LLM flagged `structure` but AST metrics look clean | `max_fn_length=18`, `max_nesting_depth=1` — under the 20-line / depth-2 heuristics |
-| `clean_03` | LLM flagged `structure` but AST metrics look clean | `max_fn_length=14`, `max_nesting_depth=2` — short and shallow |
-| `clean_03` | Pattern scanner caught a security issue the LLM missed | `Use of eval() — potential code injection` (the sample uses `eval()` safely with `__builtins__={}`, so this is a regex false positive the LLM correctly ignored) |
+| `smell_03` | LLM flagged `structure` but AST metrics look clean | `max_fn_length=18`, `max_nesting_depth=1`; under the 20-line / depth-2 heuristics |
+| `clean_03` | LLM flagged `structure` but AST metrics look clean | `max_fn_length=14`, `max_nesting_depth=2`; short and shallow |
+| `clean_03` | Pattern scanner caught a security issue the LLM missed | `Use of eval(); potential code injection` (the sample uses `eval()` safely with `__builtins__={}`, so this is a regex false positive the LLM correctly ignored) |
 
 These are the kinds of discrepancies an agent monitoring itself should
 surface rather than paper over. On this particular run F1 still met the

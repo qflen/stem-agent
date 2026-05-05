@@ -1,0 +1,60 @@
+You are helping an AI agent understand the domain of security_audit.
+
+The agent has run two deterministic tools — an AST analyser and a regex
+pattern scanner — over four unlabelled probe snippets from the corpus.
+The aggregated hit-count by tool category is:
+
+security: 1
+
+Below are the probe snippets the agent will rely on as ground for its
+strategy choice:
+
+### probe_1 — sec_audit_07
+static_signal: functions=1 max_len=5 max_depth=0; patterns: no scanner hits
+```python
+import subprocess
+
+def run_git_log(path: str) -> str:
+    return subprocess.check_output(
+        ["git", "-C", path, "log", "--oneline", "-n", "20"],
+        text=True,
+    )
+```
+
+### probe_2 — sec_audit_04
+static_signal: functions=1 max_len=2 max_depth=0; patterns: subprocess with shell=True — potential command injection
+```python
+import subprocess
+
+def ping(host: str) -> str:
+    return subprocess.check_output(f"ping -c 1 {host}", shell=True).decode()
+```
+
+Given these probes and these tool-hit signals, design the agent's
+specialization plan:
+
+1. **Review strategies**: which approaches catch the most issues that
+   *these* snippets exemplify? Order by impact for this corpus.
+2. **Issue taxonomy**: name 3-5 categories with 3-5 specific issues each
+   that the corpus hints at.
+3. **Tool categories**: which tools are likely to fire most often here?
+   Match them to the static signals above.
+4. **Output format patterns**: what does an actionable review look like
+   for this domain?
+5. **Key insights**: non-obvious things that separate expert analysis
+   from naive analysis on *this* kind of code.
+
+Respond with a JSON object matching this structure:
+{
+  "domain_name": "security_audit",
+  "review_strategies": ["strategy1", "strategy2", ...],
+  "issue_taxonomy": {
+    "category1": ["issue_type1", "issue_type2", ...],
+    "category2": [...]
+  },
+  "tool_categories": ["tool1", "tool2", ...],
+  "output_format_patterns": ["pattern1", "pattern2", ...],
+  "key_insights": ["insight1", "insight2", ...]
+}
+
+Be specific. This knowledge directly shapes the agent's capability set.

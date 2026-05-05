@@ -1,0 +1,28 @@
+{
+  "domain": "code_quality_analysis",
+  "kappa": 0.5460750853242321,
+  "ci_lo": 0.3065693430656934,
+  "ci_hi": 0.7849056603773584,
+  "disputed": 7,
+  "labels": {
+    "logic_01": "logic",
+    "logic_02": "logic",
+    "logic_03": "logic",
+    "logic_05": "logic",
+    "security_01": "security",
+    "security_02": "security",
+    "security_03": "security",
+    "security_04": "security",
+    "smell_01": "structure",
+    "smell_02": "logic",
+    "smell_03": "structure",
+    "smell_04": "logic",
+    "perf_01": "performance",
+    "perf_02": "performance",
+    "clean_01": "performance",
+    "clean_02": "logic",
+    "clean_03": "security",
+    "clean_04": "logic",
+    "clean_05": "performance"
+  }
+}

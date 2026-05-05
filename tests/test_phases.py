@@ -364,7 +364,7 @@ class TestCrossCheckVerdicts:
             issue_categories=[],
             is_clean=True,
         )
-        verdict = self._verdict("clean", [])  # LLM says clean — matches
+        verdict = self._verdict("clean", [])  # LLM says clean; matches
         disagreements = cross_check_verdicts([verdict], [sample], journal)
 
         assert disagreements == []
@@ -454,7 +454,7 @@ class TestDiagnoseFailure:
                 {
                     "kind": "scanner_found_security_pattern_llm_missed",
                     "sample_id": "sec_01",
-                    "detail": "Use of eval() — potential code injection",
+                    "detail": "Use of eval(); potential code injection",
                 },
                 {
                     "kind": "scanner_found_security_pattern_llm_missed",

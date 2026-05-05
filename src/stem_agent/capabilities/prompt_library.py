@@ -1,4 +1,4 @@
-"""Prompt library — composable prompt fragments for the specialized agent.
+"""Prompt library; composable prompt fragments for the specialized agent.
 
 The agent assembles its system prompt from these fragments during
 specialization, selecting the ones relevant to its discovered domain
@@ -7,7 +7,7 @@ knowledge and chosen capabilities.
 
 from __future__ import annotations
 
-# Base system prompt — always included
+# Base system prompt; always included
 BASE_REVIEW_PROMPT = """\
 You are a code review agent. Analyze the provided Python code and identify issues.
 For each issue found, provide:
@@ -18,12 +18,32 @@ For each issue found, provide:
 5. A concrete suggestion for how to fix it
 
 Be precise and specific. Do not flag code that is correct.
-If the code is clean, say so — do not invent issues."""
+If the code is clean, say so; do not invent issues."""
 
-# Undifferentiated prompt — used as baseline (no specialization)
+# Undifferentiated prompt; used as baseline (no specialization).
+# The JSON-output discipline is shared with the specialized prompt so the
+# baseline F1 reflects what an undifferentiated reviewer actually finds,
+# not what the parser drops on the floor for failing to be JSON.
 UNDIFFERENTIATED_PROMPT = """\
 Review the following Python code. Report any bugs, security issues, \
-or code quality problems you find. If the code looks correct, say so."""
+or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}."""
 
 # Structural analysis fragment
 STRUCTURAL_ANALYSIS_FRAGMENT = """\
@@ -71,6 +91,17 @@ Look for performance problems:
 - Algorithmic inefficiency (nested loops when hash-based lookup would work)
 - Resource leaks: files, connections, or locks not properly closed/released"""
 
+# Style consistency fragment
+STYLE_CONSISTENCY_FRAGMENT = """\
+
+## Style Consistency Pass
+Check code style and maintainability:
+- Magic numbers without named constants
+- Inconsistent naming conventions across the file
+- Overly broad exception handling (bare except: clauses)
+- Missing or misleading comments on non-obvious logic
+- Long parameter lists where a config object would read better"""
+
 # Severity ranking fragment
 SEVERITY_RANKING_FRAGMENT = """\
 
@@ -109,6 +140,7 @@ CAPABILITY_FRAGMENTS: dict[str, str] = {
     "logic_correctness": LOGIC_CORRECTNESS_FRAGMENT,
     "security_analysis": SECURITY_ANALYSIS_FRAGMENT,
     "performance_analysis": PERFORMANCE_ANALYSIS_FRAGMENT,
+    "style_consistency": STYLE_CONSISTENCY_FRAGMENT,
     "severity_ranking": SEVERITY_RANKING_FRAGMENT,
 }
 

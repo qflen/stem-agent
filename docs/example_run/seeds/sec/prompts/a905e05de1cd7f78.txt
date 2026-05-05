@@ -1,0 +1,29 @@
+You are helping an AI agent propose ONE new review capability it does not already have.
+
+Domain: security_audit
+Key insights:
+- Expert analysis often involves understanding the context of user input and its potential impact on security.
+- Naive analysis may overlook subtle vulnerabilities that arise from combining multiple functions or modules.
+- Recognizing patterns of common vulnerabilities can lead to quicker identification of issues.
+- Experts consider the broader application architecture, not just isolated code snippets.
+Issue taxonomy: {'Input Validation': ['Lack of input sanitization', 'Improper handling of user input', 'Potential for injection attacks'], 'Data Exposure': ['Exposing sensitive data through file access', 'Insecure data retrieval methods', 'Hardcoded paths leading to sensitive directories'], 'SQL Injection': ['Dynamic SQL queries without parameterization', 'User input directly included in SQL statements', 'Lack of prepared statements'], 'File Access Control': ['Insecure file access based on user input', 'Path traversal vulnerabilities', 'Improper permissions on file access']}
+
+The agent already has these capabilities:
+- structural_analysis: Analyze code structure: function length, nesting, complexity
+- logic_correctness: Detect logic bugs: off-by-one, wrong operators, missing null checks
+- security_analysis: Identify security vulnerabilities: injection, traversal, credentials
+- performance_analysis: Spot performance issues: N+1 patterns, unnecessary copies
+- style_consistency: Check code style and maintainability: naming, magic numbers
+- severity_ranking: Rank issues by severity and provide actionable output
+
+Propose exactly ONE new capability that closes a gap the existing set does not
+cover. The new capability must be specific to this domain and must not overlap
+with the existing list.
+
+Respond with JSON matching this schema:
+{
+  "name": "<snake_case identifier>",
+  "description": "<one-line description>",
+  "prompt_fragment": "## <Named Pass>\n- <specific instruction>\n- <specific instruction>\n...",
+  "validator_code": "<optional: a Python function `def check(code: str) -> list[str]` that returns a list of short string descriptions when the code exhibits the problem and [] otherwise. Only `re`, `ast`, `string` imports are permitted. Do not open files, do not call subprocesses, do not import os/sys/io/subprocess/socket/pickle. Use null if no static check is practical.>"
+}

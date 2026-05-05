@@ -1,0 +1,62 @@
+Review the following Python code. Report any bugs, security issues, or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}.
+
+## Code to Review
+```python
+import ast
+import operator
+
+# Whitelist of safe operations for the expression evaluator
+_SAFE_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+}
+
+
+def safe_eval_expr(expr: str) -> float:
+    """Safely evaluate a mathematical expression.
+
+    Uses ast.parse to build an AST and walks it manually —
+    NO use of eval(). Only arithmetic operations are permitted.
+    Raises ValueError on anything that isn't pure arithmetic.
+    """
+    tree = ast.parse(expr, mode="eval")
+    return _eval_node(tree.body)
+
+
+def _eval_node(node: ast.expr) -> float:
+    """Recursively evaluate an AST node."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value)
+    if isinstance(node, ast.BinOp):
+        op_fn = _SAFE_OPS.get(type(node.op))
+        if op_fn is None:
+            raise ValueError(f"Unsupported operator: {type(node.op).__name__}")
+        left = _eval_node(node.left)
+        right = _eval_node(node.right)
+        return op_fn(left, right)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        return -_eval_node(node.operand)
+    raise ValueError(f"Unsupported expression element: {type(node).__name__}")
+
+```

@@ -1,7 +1,7 @@
-"""Tests for evaluation metrics — edge cases a QA engineer would check.
+"""Tests for evaluation metrics; edge cases a QA engineer would check.
 
 Perfect detection, zero detection, all false positives, empty input,
-single sample — each boundary condition is verified.
+single sample; each boundary condition is verified.
 """
 
 from __future__ import annotations

@@ -1,0 +1,41 @@
+Review the following Python code. Report any bugs, security issues, or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}.
+
+## Code to Review
+```python
+def compute_stats(data: list[float]) -> dict:
+    """Compute statistics for a dataset."""
+    if not data:
+        return {"mean": 0, "std": 0, "count": 0}
+
+    total = sum(data)
+    count = len(data)
+    mean = total / count
+
+    variance = sum((x - mean) ** 2 for x in data) / count
+    std = variance ** 0.5
+
+    return {"mean": mean, "std": std, "count": count}
+
+    # Dead code below — unreachable
+    median = sorted(data)[len(data) // 2]
+    mode = max(set(data), key=data.count)
+    return {"mean": mean, "std": std, "median": median, "mode": mode}
+
+```

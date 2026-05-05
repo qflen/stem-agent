@@ -1,11 +1,11 @@
-"""Benchmark corpus — 20 Python code samples with ground-truth labels.
+"""Benchmark corpus; 19 Python code samples with ground-truth labels.
 
 Distribution:
-  - 5 logic bugs
+  - 4 logic bugs
   - 4 security vulnerabilities
   - 4 code smells / maintainability
   - 2 performance issues
-  - 5 clean code (true negatives — including adversarial "looks buggy but isn't")
+  - 5 clean code (true negatives; including adversarial "looks buggy but isn't")
 
 Each sample has ground-truth issue categories and a clean flag.
 The clean samples are deliberately non-trivial to test agent judgment.
@@ -13,6 +13,7 @@ The clean samples are deliberately non-trivial to test agent judgment.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 
 
@@ -74,20 +75,6 @@ def get_user_email(users: dict[str, dict], username: str) -> str:
     issue_categories=["logic"],
 )
 
-LOGIC_04_INTEGER_OVERFLOW = BenchmarkSample(
-    sample_id="logic_04",
-    description="Integer overflow in average calculation",
-    code='''\
-def average(a: int, b: int) -> int:
-    """Return the average of two integers, used for midpoint calculation."""
-    return (a + b) // 2  # Bug: a + b can overflow in languages with fixed ints
-    # In Python this is technically safe due to arbitrary precision,
-    # but it's a well-known anti-pattern worth flagging for portability.
-    # Correct: a + (b - a) // 2
-''',
-    issue_categories=["logic"],
-)
-
 LOGIC_05_BOOLEAN_LOGIC = BenchmarkSample(
     sample_id="logic_05",
     description="Incorrect boolean logic in access control",
@@ -99,7 +86,7 @@ def can_access_resource(user: dict) -> bool:
     is_active = user.get("active", False)
     is_admin = user.get("role") == "admin"
     has_permission = user.get("permissions", {}).get("resource_access", False)
-    # Bug: wrong precedence — this allows inactive admins
+    # Bug: wrong precedence; this allows inactive admins
     return is_active or is_admin and has_permission
 ''',
     issue_categories=["logic"],
@@ -199,7 +186,7 @@ SMELL_01_LONG_FUNCTION = BenchmarkSample(
     description="Function with too many responsibilities and deep nesting",
     code='''\
 def process_order(order: dict, db, mailer, logger) -> dict:
-    """Process an incoming order — does EVERYTHING in one function."""
+    """Process an incoming order; does EVERYTHING in one function."""
     result = {"status": "pending"}
     if order.get("items"):
         total = 0
@@ -296,7 +283,7 @@ def compute_stats(data: list[float]) -> dict:
 
     return {"mean": mean, "std": std, "count": count}
 
-    # Dead code below — unreachable
+    # Dead code below; unreachable
     median = sorted(data)[len(data) // 2]
     mode = max(set(data), key=data.count)
     return {"mean": mean, "std": std, "median": median, "mode": mode}
@@ -336,11 +323,11 @@ PERFORMANCE_01_N_PLUS_ONE = BenchmarkSample(
     description="N+1 query pattern in loop",
     code='''\
 def get_order_summaries(db, user_id: int) -> list[dict]:
-    """Get summary of all orders for a user — classic N+1 problem."""
+    """Get summary of all orders for a user; classic N+1 problem."""
     orders = db.query("SELECT id, created_at FROM orders WHERE user_id = %s", user_id)
     summaries = []
     for order in orders:
-        # Bug: one query per order — should be a JOIN or batch query
+        # Bug: one query per order; should be a JOIN or batch query
         items = db.query(
             "SELECT name, quantity, price FROM order_items WHERE order_id = %s",
             order["id"],
@@ -380,7 +367,7 @@ def find_common_elements(lists: list[list[int]]) -> list[int]:
 )
 
 # ---------------------------------------------------------------------------
-# Clean Code — True Negatives (5 samples)
+# Clean Code; True Negatives (5 samples)
 # These are non-trivial, correct code. The agent should NOT flag them.
 # Some deliberately *look* suspicious but are correct.
 # ---------------------------------------------------------------------------
@@ -420,7 +407,7 @@ CLEAN_02_COMPLEX_REGEX = BenchmarkSample(
 import re
 
 # RFC 5322 simplified email validation pattern.
-# Intentionally permissive — validates syntax, not deliverability.
+# Intentionally permissive; validates syntax, not deliverability.
 # The apparent complexity is warranted by the RFC's actual grammar.
 EMAIL_PATTERN = re.compile(
     r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+"
@@ -469,7 +456,7 @@ _SAFE_OPS = {
 def safe_eval_expr(expr: str) -> float:
     """Safely evaluate a mathematical expression.
 
-    Uses ast.parse to build an AST and walks it manually —
+    Uses ast.parse to build an AST and walks it manually;
     NO use of eval(). Only arithmetic operations are permitted.
     Raises ValueError on anything that isn't pure arithmetic.
     """
@@ -510,7 +497,7 @@ def resilient_parse(raw_data: list[str]) -> list[dict[str, Any]]:
 
     This function is intentionally lenient: it's used at the boundary
     of an ingestion pipeline where partial results are better than
-    total failure. The broad except is deliberate — we log and skip
+    total failure. The broad except is deliberate; we log and skip
     rather than crash the entire pipeline.
     """
     results = []
@@ -555,7 +542,7 @@ def find_connected_components(graph: Graph) -> Components:
     """Find all connected components in an undirected graph using BFS.
 
     The nested comprehension for building the adjacency set looks complex
-    but is standard graph algorithm boilerplate — not a code smell.
+    but is standard graph algorithm boilerplate; not a code smell.
     """
     visited: set[str] = set()
     components: Components = []
@@ -596,14 +583,84 @@ def invert_index(documents: dict[str, list[str]]) -> dict[str, set[str]]:
 )
 
 
+@dataclass(frozen=True)
+class CorpusPartition:
+    """A seed-deterministic partition of a benchmark corpus.
+
+    ``validation`` drives the post-specialization F1 measurement,
+    ``holdout`` is the disjoint slice the empirical-holdout gate uses to
+    decide whether a generated capability earns admission, and ``probe``
+    is the unlabelled slice that probe-grounded sensing inspects. The
+    three slices are pairwise disjoint when ``overlapping`` is False; on
+    corpora too small for a clean 11/4/4 split (notably the 8-sample
+    security audit fixture), the slices may share members and
+    ``overlapping`` flags that to downstream callers so they can record
+    the limitation in the journal.
+    """
+
+    validation: list[BenchmarkSample]
+    holdout: list[BenchmarkSample]
+    probe: list[BenchmarkSample]
+    overlapping: bool = False
+
+
+_CORPUS_PARTITION_SIZES: tuple[int, int, int] = (11, 4, 4)
+
+
+def _stable_bucket(sample_id: str, seed: int) -> int:
+    digest = hashlib.sha256(f"{sample_id}:{seed}".encode()).hexdigest()
+    return int(digest, 16)
+
+
+def partition(corpus: list[BenchmarkSample], seed: int) -> CorpusPartition:
+    """Split ``corpus`` into validation/holdout/probe by stable hash.
+
+    Sorts the input by ``sample_id`` so the result is independent of the
+    caller's list ordering, then ranks by ``sha256(sample_id:seed)``. The
+    lowest-ranked 11 samples form ``validation``, the next 4 form
+    ``holdout``, the next 4 form ``probe``. If the corpus has fewer
+    than 19 samples the slices are reduced proportionally and
+    ``overlapping=True`` flags the limitation; the audit corpus uses
+    this path.
+    """
+    needed = sum(_CORPUS_PARTITION_SIZES)
+    sorted_corpus = sorted(corpus, key=lambda s: s.sample_id)
+    ranked = sorted(sorted_corpus, key=lambda s: _stable_bucket(s.sample_id, seed))
+
+    if len(ranked) >= needed:
+        v_end = _CORPUS_PARTITION_SIZES[0]
+        h_end = v_end + _CORPUS_PARTITION_SIZES[1]
+        p_end = h_end + _CORPUS_PARTITION_SIZES[2]
+        return CorpusPartition(
+            validation=ranked[:v_end],
+            holdout=ranked[v_end:h_end],
+            probe=ranked[h_end:p_end],
+            overlapping=False,
+        )
+
+    # Small corpus: distribute every sample to validation, then fill
+    # holdout and probe by reuse so downstream callers can still reason
+    # about all three slices. The overlapping flag tells them not to
+    # treat holdout/probe as disjoint A/B fixtures.
+    n = len(ranked)
+    v_size = max(1, n // 2)
+    h_size = max(1, (n - v_size) // 2)
+    p_size = max(1, n - v_size - h_size)
+    return CorpusPartition(
+        validation=ranked[:v_size],
+        holdout=ranked[v_size : v_size + h_size] if v_size + h_size <= n else ranked[-h_size:],
+        probe=ranked[-p_size:],
+        overlapping=True,
+    )
+
+
 def get_benchmark_corpus() -> list[BenchmarkSample]:
-    """Return the complete benchmark corpus of 20 samples."""
+    """Return the complete benchmark corpus of 19 samples."""
     return [
-        # Logic bugs (5)
+        # Logic bugs (4)
         LOGIC_01_OFF_BY_ONE,
         LOGIC_02_WRONG_OPERATOR,
         LOGIC_03_MISSING_NONE_CHECK,
-        LOGIC_04_INTEGER_OVERFLOW,
         LOGIC_05_BOOLEAN_LOGIC,
         # Security vulnerabilities (4)
         SECURITY_01_SQL_INJECTION,
@@ -618,7 +675,7 @@ def get_benchmark_corpus() -> list[BenchmarkSample]:
         # Performance issues (2)
         PERFORMANCE_01_N_PLUS_ONE,
         PERFORMANCE_02_UNNECESSARY_COPY,
-        # Clean code — true negatives (5)
+        # Clean code; true negatives (5)
         CLEAN_01_WALRUS_OPERATOR,
         CLEAN_02_COMPLEX_REGEX,
         CLEAN_03_SAFE_EVAL,

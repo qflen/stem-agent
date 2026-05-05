@@ -8,7 +8,16 @@ Full writeup: [`docs/writeup.pdf`](docs/writeup.pdf) (4 pages).
 
 https://github.com/user-attachments/assets/2da6098c-45eb-47ce-b338-03519fb83a08
 
-The clip above replays a recorded run from `docs/example_run/journal.json` (no live API calls) and lands on the headline numbers: baseline F1 `0.000` → specialized F1 `0.778` on the 20-sample benchmark. Pausable; 15 seconds.
+The clip above replays a recorded run (no live API calls). The current
+headline is computed across **3 seeds × 2 domains** (live OpenAI runs,
+artifacts under [`docs/example_run/seeds/`](docs/example_run/seeds/)):
+
+- Code-quality, 11-sample validation: F1 = **0.837 [0.800, 0.889]**, specificity 0.444.
+- Security audit, 4-sample validation: F1 = **0.794 [0.667, 0.857]**, specificity 0.000.
+
+Cross-domain 2×2 and Cohen's κ adjudicator results are in
+[`docs/writeup.pdf`](docs/writeup.pdf) (Tables 2–3). Total live spend
+across the multi-seed batch was ~$1.30.
 
 ## Quick Start
 
@@ -51,6 +60,18 @@ echo 'OPENAI_API_KEY=your-key-here' > .env
 ```bash
 # Run the full differentiation process
 stem-agent differentiate --domain code_quality_analysis
+
+# Multi-seed run (deterministic 11/4/4 partition by seed)
+stem-agent differentiate --seeds 3 --domain code_quality_analysis --store-prompts
+
+# Render the headline mean ± 95% CI table from a multi-seed dir
+stem-agent report docs/example_run/seeds/cq
+
+# Print the with-vs-without-capability-generation 2×4 ablation grid
+stem-agent eval-ablation
+
+# Replay a stored prompt by its journal hash
+stem-agent replay <prompt_hash>
 
 # Review a Python file with the specialized agent
 stem-agent review path/to/file.py
@@ -111,13 +132,18 @@ src/stem_agent/
 
 ## Evaluation
 
-The benchmark corpus contains 20 Python code samples with ground-truth labels:
-- 5 logic bugs (off-by-one, wrong operators, missing null checks)
-- 4 security vulnerabilities (SQL injection, path traversal, hardcoded credentials)
-- 4 code smells (deep nesting, god functions, dead code)
+The benchmark corpus contains 19 Python code samples with ground-truth
+labels, partitioned 11 / 4 / 4 into validation, holdout, and probe
+slices by a stable seed-deterministic hash:
+
+- 4 logic bugs (off-by-one, wrong operators, missing null checks, broken boolean precedence)
+- 4 security vulnerabilities (SQL injection, path traversal, hardcoded credentials, unsafe eval)
+- 4 code smells (deep nesting, god functions, dead code, magic-number stack)
 - 2 performance issues (N+1 queries, unnecessary copies)
 - 5 clean code samples (adversarial true negatives that look suspicious but are correct)
 
-Precision, recall, F1, and specificity, measured before and after specialization on the same corpus.
+Precision, recall, F1, and specificity are measured on the validation
+slice; the holdout drives the empirical-admission gate on
+LLM-generated capabilities; the probe is fed unlabelled into sensing.
 
-142 deterministic tests, no network.
+278 deterministic tests, no network.

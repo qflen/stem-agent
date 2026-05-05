@@ -1,4 +1,4 @@
-.PHONY: run eval test lint journal clean install
+.PHONY: run eval eval-ablation test lint journal clean install
 
 install:
 	uv pip install -e ".[dev]"
@@ -8,6 +8,9 @@ run:
 
 eval:
 	stem-agent evaluate
+
+eval-ablation:
+	stem-agent eval-ablation
 
 test:
 	python -m pytest tests/ -v

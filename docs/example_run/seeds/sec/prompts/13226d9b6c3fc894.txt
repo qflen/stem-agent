@@ -1,0 +1,37 @@
+You are helping an AI agent plan its specialization for security_audit.
+
+The agent has learned the following about the domain:
+- Review strategies: Code review focusing on input validation and sanitization, Static analysis for SQL injection vulnerabilities, Dynamic analysis to test for file path traversal issues, Manual inspection for hardcoded paths and sensitive data exposure, Pattern matching for common security flaws
+- Issue taxonomy: {'Input Validation': ['Lack of input sanitization', 'Improper handling of user input', 'Potential for injection attacks'], 'Data Exposure': ['Exposing sensitive data through file access', 'Insecure data retrieval methods', 'Hardcoded paths leading to sensitive directories'], 'SQL Injection': ['Dynamic SQL queries without parameterization', 'User input directly included in SQL statements', 'Lack of prepared statements'], 'File Access Control': ['Insecure file access based on user input', 'Path traversal vulnerabilities', 'Improper permissions on file access']}
+- Tools/techniques: Static code analyzers, Dynamic analysis tools, Regex pattern scanners, Input validation libraries
+- Key insights: Expert analysis often involves understanding the context of user input and its potential impact on security., Naive analysis may overlook subtle vulnerabilities that arise from combining multiple functions or modules., Recognizing patterns of common vulnerabilities can lead to quicker identification of issues.
+- Tool-fit hits over probe slice: (none)
+
+Available capabilities the agent can select (ordered by tool-fit relevance):
+- security_analysis: Identify security vulnerabilities: injection, traversal, credentials
+- severity_ranking: Rank issues by severity and provide actionable output
+- contextual_vulnerability_analysis: Analyzes the broader application context to identify vulnerabilities arising from interactions between modules.
+- structural_analysis: Analyze code structure: function length, nesting, complexity
+- logic_correctness: Detect logic bugs: off-by-one, wrong operators, missing null checks
+- performance_analysis: Spot performance issues: N+1 patterns, unnecessary copies
+- style_consistency: Check code style and maintainability: naming, magic numbers
+
+Design a specialization plan:
+
+1. **Selected capabilities**: Which capabilities should the agent acquire?    Choose from the available list by name.
+2. **Review passes**: Design a multi-pass review pipeline. Each pass focuses    on one aspect. Suggest 3-5 passes ordered by priority.    Each pass should map to a capability name.
+3. **Evaluation criteria**: What metric thresholds should the agent meet?    Use standard metrics: f1_threshold, precision_min, recall_min.
+4. **Domain insights**: What key insights from sensing should be embedded    in the agent's system prompt? Write 2-3 sentences.
+5. **Reasoning**: Explain why this plan was chosen over alternatives.
+
+Respond with JSON:
+{
+  "selected_capabilities": ["cap1", "cap2", ...],
+  "review_passes": [
+    {"pass_name": "...", "focus_area": "...", "capability_name": "...", "priority": 1},
+    ...
+  ],
+  "evaluation_criteria": {"f1_threshold": 0.6, "precision_min": 0.5},
+  "domain_insights_for_prompt": "...",
+  "reasoning": "..."
+}

@@ -1,0 +1,36 @@
+You are helping an AI agent plan its specialization for code_quality_analysis.
+
+The agent has learned the following about the domain:
+- Review strategies: Static analysis for logic errors, Performance optimization review, Code smell detection, Complexity analysis
+- Issue taxonomy: {'Logic Errors': ['Incorrect boundary conditions', 'Null reference handling', 'Incorrect assumptions about data structure'], 'Performance Issues': ['Unnecessary data copying', 'Inefficient data structure usage', 'Suboptimal algorithm complexity'], 'Code Smells': ['Deep nesting of conditionals', 'Long function length', 'Repeated code patterns'], 'Complexity Issues': ['High cyclomatic complexity', 'Deep call stacks', 'Excessive function parameters']}
+- Tools/techniques: AST Analyzer, Regex Pattern Scanner
+- Key insights: Expert analysis often involves understanding the context and intent behind the code, not just the syntax., Recognizing patterns of common mistakes can lead to more efficient reviews., Performance issues may not always be apparent without profiling, but static analysis can highlight potential inefficiencies.
+- Tool-fit hits over probe slice: structure=1
+
+Available capabilities the agent can select (ordered by tool-fit relevance):
+- structural_analysis: Analyze code structure: function length, nesting, complexity
+- logic_correctness: Detect logic bugs: off-by-one, wrong operators, missing null checks
+- security_analysis: Identify security vulnerabilities: injection, traversal, credentials
+- performance_analysis: Spot performance issues: N+1 patterns, unnecessary copies
+- style_consistency: Check code style and maintainability: naming, magic numbers
+- severity_ranking: Rank issues by severity and provide actionable output
+
+Design a specialization plan:
+
+1. **Selected capabilities**: Which capabilities should the agent acquire?    Choose from the available list by name.
+2. **Review passes**: Design a multi-pass review pipeline. Each pass focuses    on one aspect. Suggest 3-5 passes ordered by priority.    Each pass should map to a capability name.
+3. **Evaluation criteria**: What metric thresholds should the agent meet?    Use standard metrics: f1_threshold, precision_min, recall_min.
+4. **Domain insights**: What key insights from sensing should be embedded    in the agent's system prompt? Write 2-3 sentences.
+5. **Reasoning**: Explain why this plan was chosen over alternatives.
+
+Respond with JSON:
+{
+  "selected_capabilities": ["cap1", "cap2", ...],
+  "review_passes": [
+    {"pass_name": "...", "focus_area": "...", "capability_name": "...", "priority": 1},
+    ...
+  ],
+  "evaluation_criteria": {"f1_threshold": 0.6, "precision_min": 0.5},
+  "domain_insights_for_prompt": "...",
+  "reasoning": "..."
+}

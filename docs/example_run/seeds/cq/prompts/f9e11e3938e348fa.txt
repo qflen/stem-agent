@@ -1,0 +1,117 @@
+You are helping an AI agent understand the domain of code_quality_analysis.
+
+The agent has run two deterministic tools — an AST analyser and a regex
+pattern scanner — over four unlabelled probe snippets from the corpus.
+The aggregated hit-count by tool category is:
+
+security: 1
+
+Below are the probe snippets the agent will rely on as ground for its
+strategy choice:
+
+### probe_1 — clean_03
+static_signal: functions=2 max_len=14 max_depth=2; patterns: Use of eval() — potential code injection
+```python
+import ast
+import operator
+
+# Whitelist of safe operations for the expression evaluator
+_SAFE_OPS = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+}
+
+
+def safe_eval_expr(expr: str) -> float:
+    """Safely evaluate a mathematical expression.
+
+    Uses ast.parse to build an AST and walks it manually —
+    NO use of eval(). Only arithmetic operations are permitted.
+    Raises ValueError on anything that isn't pure arithmetic.
+    """
+    tree = ast.parse(expr, mode="eval")
+  
+# ... (truncated)
+```
+
+### probe_2 — clean_02
+static_signal: functions=2 max_len=9 max_depth=1; patterns: no scanner hits
+```python
+import re
+
+# RFC 5322 simplified email validation pattern.
+# Intentionally permissive — validates syntax, not deliverability.
+# The apparent complexity is warranted by the RFC's actual grammar.
+EMAIL_PATTERN = re.compile(
+    r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+"
+    r"@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
+    r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+)
+
+
+def validate_email(email: str) -> bool:
+    """Validate email format against a simplified RFC 5322 pattern.
+
+    Returns True if the email has valid syntax. Does not check
+    whether the domain exists or the mailbox i
+# ... (truncated)
+```
+
+### probe_3 — logic_01
+static_signal: functions=1 max_len=12 max_depth=3; patterns: no scanner hits
+```python
+def binary_search(arr: list[int], target: int) -> int:
+    """Return index of target in sorted array, or -1 if not found."""
+    low, high = 0, len(arr)  # Bug: should be len(arr) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
+```
+
+### probe_4 — logic_03
+static_signal: functions=1 max_len=4 max_depth=0; patterns: no scanner hits
+```python
+def get_user_email(users: dict[str, dict], username: str) -> str:
+    """Look up a user's email by username."""
+    user = users.get(username)
+    return user["email"]  # Bug: user could be None
+```
+
+Given these probes and these tool-hit signals, design the agent's
+specialization plan:
+
+1. **Review strategies**: which approaches catch the most issues that
+   *these* snippets exemplify? Order by impact for this corpus.
+2. **Issue taxonomy**: name 3-5 categories with 3-5 specific issues each
+   that the corpus hints at.
+3. **Tool categories**: which tools are likely to fire most often here?
+   Match them to the static signals above.
+4. **Output format patterns**: what does an actionable review look like
+   for this domain?
+5. **Key insights**: non-obvious things that separate expert analysis
+   from naive analysis on *this* kind of code.
+
+Respond with a JSON object matching this structure:
+{
+  "domain_name": "code_quality_analysis",
+  "review_strategies": ["strategy1", "strategy2", ...],
+  "issue_taxonomy": {
+    "category1": ["issue_type1", "issue_type2", ...],
+    "category2": [...]
+  },
+  "tool_categories": ["tool1", "tool2", ...],
+  "output_format_patterns": ["pattern1", "pattern2", ...],
+  "key_insights": ["insight1", "insight2", ...]
+}
+
+Be specific. This knowledge directly shapes the agent's capability set.

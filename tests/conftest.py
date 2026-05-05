@@ -1,7 +1,8 @@
-"""Shared test fixtures — including FakeLLM, a first-class test double.
+"""Shared test fixtures; pulls FakeLLM from the production module.
 
-FakeLLM is not an afterthought: it implements the same LLM Protocol
-as production adapters and returns realistic, structured responses.
+The class itself lives in ``stem_agent.evaluation.fake_llm`` so the
+ablation CLI can use it offline; the conftest only owns the realistic
+canned responses each fixture composes.
 """
 
 from __future__ import annotations
@@ -11,84 +12,16 @@ import tempfile
 from typing import Any
 
 import pytest
-from pydantic import BaseModel
 
 from stem_agent.capabilities.registry import CapabilityRegistry, build_default_registry
 from stem_agent.core.config import StemAgentConfig
 from stem_agent.core.journal import EvolutionJournal
 from stem_agent.core.state_machine import StateMachine
+from stem_agent.evaluation.fake_llm import FakeLLM
 from stem_agent.evaluation.fixtures.code_samples import (
     BenchmarkSample,
     get_benchmark_corpus,
 )
-
-
-class FakeLLM:
-    """Deterministic LLM test double implementing the LLMPort protocol.
-
-    Returns pre-configured responses keyed by substring matches in the prompt.
-    Falls back to a default response if no match is found. Tracks all calls
-    for assertion.
-    """
-
-    def __init__(
-        self,
-        responses: dict[str, str] | None = None,
-        structured_responses: dict[str, dict[str, Any]] | None = None,
-        default_response: str = '{"issues": [], "summary": "No issues found.", "is_clean": true}',
-    ) -> None:
-        self._responses = responses or {}
-        self._structured_responses = structured_responses or {}
-        self._default_response = default_response
-        self.calls: list[dict[str, Any]] = []
-        self.last_usage: dict[str, int] | None = None
-
-    def _fake_usage(self, prompt: str, completion: str) -> dict[str, int]:
-        """Return ~4-chars-per-token estimates so token_count is populated."""
-        prompt_tokens = max(1, len(prompt) // 4)
-        completion_tokens = max(1, len(completion) // 4)
-        return {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": prompt_tokens + completion_tokens,
-        }
-
-    def generate(self, prompt: str, *, model: str | None = None) -> str:
-        """Return a canned response based on prompt substring matching."""
-        self.calls.append({"method": "generate", "prompt": prompt, "model": model})
-
-        for key, response in self._responses.items():
-            if key in prompt:
-                self.last_usage = self._fake_usage(prompt, response)
-                return response
-        self.last_usage = self._fake_usage(prompt, self._default_response)
-        return self._default_response
-
-    def structured_generate(
-        self,
-        prompt: str,
-        response_model: type[BaseModel],
-        *,
-        model: str | None = None,
-    ) -> BaseModel:
-        """Return a structured response matching the requested model."""
-        self.calls.append(
-            {
-                "method": "structured_generate",
-                "prompt": prompt,
-                "model": model,
-                "response_model": response_model.__name__,
-            }
-        )
-
-        for key, data in self._structured_responses.items():
-            if key in prompt:
-                self.last_usage = self._fake_usage(prompt, json.dumps(data))
-                return response_model.model_validate(data)
-
-        fallback = self._structured_responses.get("default", {})
-        self.last_usage = self._fake_usage(prompt, json.dumps(fallback))
-        return response_model.model_validate(fallback)
 
 
 def _make_sensing_response() -> dict[str, Any]:
@@ -121,7 +54,7 @@ def _make_sensing_response() -> dict[str, Any]:
         "key_insights": [
             "Expert reviewers distinguish false positives from real issues",
             "Multi-pass reviews catch more issues than single-pass",
-            "Clean code that looks suspicious should not be flagged — specificity matters",
+            "Clean code that looks suspicious should not be flagged; specificity matters",
         ],
     }
 
@@ -248,13 +181,13 @@ def _make_capability_generation_response() -> dict[str, Any]:
 def _make_hostile_capability_response() -> dict[str, Any]:
     """Proposal whose validator tries to read the filesystem.
 
-    The AST scan should reject this at the static layer — the code
+    The AST scan should reject this at the static layer; the code
     references the forbidden name ``open`` before the subprocess even
     runs. Tests use this to assert the sandbox's rejection path.
     """
     return {
         "name": "filesystem_probe",
-        "description": "Tries to exfiltrate local files — must be rejected.",
+        "description": "Tries to exfiltrate local files; must be rejected.",
         "prompt_fragment": "## Hostile Pass\n- should never be admitted",
         "validator_code": (
             "def check(code):\n    data = open('/etc/passwd').read()\n    return [data]\n"
@@ -290,7 +223,7 @@ def _make_security_planning_response() -> dict[str, Any]:
         },
         "domain_insights_for_prompt": (
             "Focus exclusively on security: trace untrusted input to every sink. "
-            "Do not flag style or structural issues — they are out of scope for an audit."
+            "Do not flag style or structural issues; they are out of scope for an audit."
         ),
         "reasoning": (
             "A security audit benefits from a narrow, deep focus rather than a broad "
@@ -532,7 +465,7 @@ def fake_llm() -> FakeLLM:
                     "is_clean": False,
                 }
             ),
-            # Clean code — should report no issues
+            # Clean code; should report no issues
             "walrus": _make_review_response_clean(),
             "EMAIL_PATTERN": _make_review_response_clean(),
             "safe_eval_expr": _make_review_response_clean(),
@@ -569,7 +502,7 @@ def hostile_capability_llm() -> FakeLLM:
 
 @pytest.fixture
 def poor_fake_llm() -> FakeLLM:
-    """A FakeLLM that produces poor results — triggers rollback."""
+    """A FakeLLM that produces poor results; triggers rollback."""
     return FakeLLM(
         default_response=json.dumps(
             {
@@ -591,6 +524,32 @@ def poor_fake_llm() -> FakeLLM:
             "default": _make_sensing_response(),
         },
     )
+
+
+class InMemoryStorage:
+    """StoragePort double; keeps every save in a dict, no filesystem.
+
+    Used by tests so the architecture lint that bans ``adapters/`` imports
+    in ``core/`` and ``phases/`` does not push us into spinning up
+    ``JsonStorageAdapter`` on every test that needs a ``StemAgent``.
+    """
+
+    def __init__(self) -> None:
+        self._store: dict[str, dict[str, Any]] = {}
+
+    def save(self, key: str, data: dict[str, Any]) -> None:
+        self._store[key] = data
+
+    def load(self, key: str) -> dict[str, Any] | None:
+        return self._store.get(key)
+
+    def list_keys(self, prefix: str = "") -> list[str]:
+        return sorted(k for k in self._store if k.startswith(prefix))
+
+
+@pytest.fixture
+def in_memory_storage() -> InMemoryStorage:
+    return InMemoryStorage()
 
 
 @pytest.fixture

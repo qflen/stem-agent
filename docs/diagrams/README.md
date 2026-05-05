@@ -1,7 +1,7 @@
 # Diagrams
 
 Diagram sources with pre-rendered SVGs committed alongside. The writeup
-embeds the SVGs directly — they render crisp at any zoom and GitHub
+embeds the SVGs directly; they render crisp at any zoom and GitHub
 displays them inline.
 
 ## Files

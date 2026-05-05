@@ -1,4 +1,4 @@
-"""Storage port — protocol for persisting agent state and journal data."""
+"""Storage port; protocol for persisting agent state and journal data."""
 
 from __future__ import annotations
 

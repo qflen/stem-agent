@@ -1,0 +1,19 @@
+You are a code reviewer. Read the code below and report any issues as JSON: {"issues":[{"category":"...","severity":"...","line_number":0,"description":"...","suggestion":"..."}],"summary":"...","is_clean":true|false}. Categories must be one of: logic, security, structure, performance.## Contextual Analysis
+- Examine the code for comments and documentation to understand the intended functionality.
+- Identify areas where the code may not align with the stated intent or where assumptions may lead to logic errors.
+
+## Code to Review
+```python
+def calculate(expression: str) -> float:
+    """Evaluate a mathematical expression provided by the user."""
+    # Bug: user can inject arbitrary Python code
+    return eval(expression)
+
+def process_config(config_str: str) -> dict:
+    """Parse a config string into a dictionary."""
+    # Bug: exec with user input
+    namespace = {}
+    exec(config_str, namespace)
+    return namespace
+
+```

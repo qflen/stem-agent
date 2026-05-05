@@ -1,4 +1,4 @@
-"""StemAgent — the undifferentiated core that orchestrates differentiation.
+"""StemAgent; the undifferentiated core that orchestrates differentiation.
 
 This is the main entry point for the differentiation process. It manages
 the state machine, phases, and journal, driving the agent from
@@ -14,7 +14,7 @@ from typing import Any
 from rich.console import Console
 from rich.text import Text
 
-from stem_agent.adapters.json_storage import JsonStorageAdapter
+from stem_agent.capabilities.dispatcher import format_dispatcher_findings, maybe_make_dispatcher
 from stem_agent.capabilities.registry import CapabilityRegistry, build_default_registry
 from stem_agent.capabilities.tools import analyze_structure, scan_patterns
 from stem_agent.core.config import StemAgentConfig
@@ -28,13 +28,25 @@ from stem_agent.evaluation.benchmark import (
     format_tool_findings,
     parse_review_response,
 )
-from stem_agent.evaluation.fixtures.code_samples import BenchmarkSample
+from stem_agent.evaluation.fixtures.code_samples import (
+    BenchmarkSample,
+    get_benchmark_corpus,
+    partition,
+)
+from stem_agent.evaluation.fixtures.security_audit_samples import (
+    get_security_audit_corpus,
+)
 from stem_agent.phases.capability_generation import CapabilityGenerationPhase
 from stem_agent.phases.planning import PlanningPhase
 from stem_agent.phases.sensing import SensingPhase
 from stem_agent.phases.specialization import SpecializationPhase, SpecializedAgentConfig
-from stem_agent.phases.validation import ValidationPhase, diagnose_failure
+from stem_agent.phases.validation import (
+    ValidationPhase,
+    diagnose_failure,
+    diagnose_summary,
+)
 from stem_agent.ports.llm import LLMPort
+from stem_agent.ports.storage import StoragePort
 
 console = Console()
 
@@ -50,6 +62,7 @@ class StemAgent:
         self,
         config: StemAgentConfig,
         llm: LLMPort,
+        storage: StoragePort,
         registry: CapabilityRegistry | None = None,
         corpus: list[BenchmarkSample] | None = None,
     ) -> None:
@@ -65,10 +78,11 @@ class StemAgent:
             "f1_threshold": config.f1_threshold,
             "improvement_required": config.improvement_required,
             "max_rollback_attempts": config.max_rollback_attempts,
+            "token_budget_cap": config.token_budget_cap,
         }
         self._agent_config: SpecializedAgentConfig | None = None
         self._previous_prompt: str | None = None
-        self._storage = JsonStorageAdapter(config.journal_dir)
+        self._storage = storage
 
     @property
     def state(self) -> AgentState:
@@ -82,16 +96,37 @@ class StemAgent:
     def agent_config(self) -> SpecializedAgentConfig | None:
         return self._agent_config
 
-    def differentiate(self, domain: str = "code_quality_analysis") -> bool:
+    @property
+    def context_snapshot(self) -> dict[str, Any]:
+        """Read-only view onto the live differentiation context.
+
+        Exposed so post-run inspectors (the ablation harness, integration
+        tests) can pull the comparison and partition without touching
+        ``_context`` directly.
+        """
+        return dict(self._context)
+
+    def differentiate(
+        self,
+        domain: str = "code_quality_analysis",
+        *,
+        journal_key: str | None = None,
+    ) -> bool:
         """Run the full differentiation process.
 
         Args:
             domain: The domain signal to specialize for.
+            journal_key: Storage key for the persisted journal. Defaults to
+                ``journal_<timestamp>``; pass an explicit key when running
+                under ``--seeds`` to land each seed's journal at a stable
+                path the writeup can reference.
 
         Returns:
             True if specialization succeeded, False if it failed.
         """
         self._context["domain"] = domain
+        self._context["storage"] = self._storage
+        self._context["partition"] = self._compute_partition(domain)
 
         console.print(f"\n[bold blue]Starting differentiation for domain: {domain}[/bold blue]\n")
 
@@ -102,7 +137,7 @@ class StemAgent:
         self._context = sensing.execute(self._context, self._llm, self._journal)
         console.print("[green]  Sensing complete.[/green]")
 
-        # Phase 1.5: CAPABILITY GENERATION — one-shot, before the rollback loop.
+        # Phase 1.5: CAPABILITY GENERATION; one-shot, before the rollback loop.
         # A rejected proposal leaves the registry untouched and differentiation
         # continues on the pure composition path.
         console.print("[dim]Phase 1.5: Proposing novel capability...[/dim]")
@@ -133,10 +168,11 @@ class StemAgent:
                 self._render_prompt_diff(self._previous_prompt, current_prompt)
             self._previous_prompt = current_prompt
 
-            # Phase 4: VALIDATING
+            # Phase 4: VALIDATING; runs on the partition's validation slice so
+            # holdout and probe stay disjoint from the benchmark.
             self._transition(AgentState.VALIDATING)
             console.print("[dim]Phase 4: Validating against benchmark...[/dim]")
-            validation = ValidationPhase(corpus=self._corpus)
+            validation = ValidationPhase(corpus=self._context["partition"].validation)
             self._context = validation.execute(self._context, self._llm, self._journal)
             console.print("[green]  Validation complete.[/green]")
 
@@ -144,6 +180,7 @@ class StemAgent:
             guard_context = {
                 **self._context,
                 "rollback_count": self._state_machine.rollback_count,
+                "total_tokens": self._journal.total_tokens,
             }
 
             try:
@@ -153,7 +190,7 @@ class StemAgent:
                     "\n[bold green]Differentiation successful! "
                     "Agent is now SPECIALIZED.[/bold green]\n"
                 )
-                self._save_journal()
+                self._save_journal(journal_key)
                 return True
 
             except GuardFailedError as e:
@@ -169,12 +206,22 @@ class StemAgent:
                         "Differentiation failed.[/bold red]\n"
                     )
                     self._state_machine.transition(AgentState.FAILED, guard_context)
-                    self._save_journal()
+                    self._save_journal(journal_key)
                     return False
 
                 # Diagnose and adjust
-                console.print("[dim]  Rolling back — diagnosing failure...[/dim]")
+                console.print("[dim]  Rolling back; diagnosing failure...[/dim]")
                 adjustments = diagnose_failure(self._context, self._journal)
+                summary = diagnose_summary(self._context)
+                history = list(self._context.get("rollback_history") or [])
+                history.append(
+                    {
+                        "attempt_idx": self._state_machine.rollback_count,
+                        "adjustments": adjustments,
+                        "summary": summary,
+                    }
+                )
+                self._context["rollback_history"] = history
                 self._context["rollback_adjustments"] = adjustments
                 for adj in adjustments:
                     console.print(f"[yellow]    Adjustment: {adj}[/yellow]")
@@ -201,12 +248,20 @@ class StemAgent:
         metrics = analyze_structure(code)
         patterns = scan_patterns(code)
         tool_block = format_tool_findings(metrics, patterns)
+
+        dispatcher = maybe_make_dispatcher(self._registry)
+        dispatcher_findings: list[Any] = []
+        if dispatcher is not None:
+            dispatcher_findings = dispatcher.run(code)
+            tool_block += "\n\n" + format_dispatcher_findings(dispatcher_findings)
+
         self._journal.log_decision(
             phase="review",
             decision="Invoked analyze_structure and scan_patterns before review",
             reasoning=(
                 f"ast={'parsed' if metrics is not None else 'parse_failed'}, "
-                f"pattern_matches={len(patterns)}"
+                f"pattern_matches={len(patterns)}, "
+                f"dispatcher_findings={len(dispatcher_findings)}"
             ),
         )
 
@@ -226,7 +281,7 @@ class StemAgent:
     def _render_prompt_diff(self, before: str, after: str) -> None:
         """Render a colourised unified diff of two prompts and log a summary.
 
-        Rollback is where the agent *learns* — showing what the prompt
+        Rollback is where the agent *learns*; showing what the prompt
         gained or lost across an attempt makes that learning legible to
         a reviewer instead of buried inside "agent_config changed".
         """
@@ -266,11 +321,23 @@ class StemAgent:
             ),
         )
 
-    def _save_journal(self) -> None:
-        """Persist the evolution journal."""
+    def _compute_partition(self, domain: str):
+        """Build the seed-deterministic partition from ``self._corpus`` (or default)."""
+        corpus = self._corpus
+        if corpus is None:
+            corpus = (
+                get_security_audit_corpus()
+                if domain == "security_audit"
+                else get_benchmark_corpus()
+            )
+        return partition(corpus, seed=self._config.seed)
+
+    def _save_journal(self, key: str | None = None) -> None:
+        """Persist the evolution journal under the supplied key (or a timestamp)."""
         from datetime import datetime
 
-        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-        key = f"journal_{timestamp}"
+        if key is None:
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+            key = f"journal_{timestamp}"
         self._storage.save(key, self._journal.to_dict())
         console.print(f"[dim]Journal saved: {key}[/dim]")

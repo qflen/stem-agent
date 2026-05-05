@@ -1,7 +1,7 @@
 """Tests for static-tool invocation on the specialized review path.
 
 The specialized agent used to *advertise* AST analysis and pattern
-scanning in its prompt fragments without ever calling them — the tools
+scanning in its prompt fragments without ever calling them; the tools
 only ran in the cross-check, after the review was over. These tests
 pin the wired-up behaviour: tools run before the LLM call, their
 findings are injected into the prompt, and each invocation is recorded
@@ -15,7 +15,7 @@ from stem_agent.core.config import StemAgentConfig
 from stem_agent.core.journal import EventType, EvolutionJournal
 from stem_agent.evaluation.benchmark import format_tool_findings, make_llm_review_fn
 from stem_agent.evaluation.fixtures.code_samples import get_benchmark_corpus
-from tests.conftest import FakeLLM
+from tests.conftest import FakeLLM, InMemoryStorage
 
 
 class TestFormatToolFindings:
@@ -114,7 +114,9 @@ class TestAgentReviewInvokesTools:
             improvement_required=False,
             max_rollback_attempts=1,
         )
-        agent = StemAgent(config=config, llm=fake_llm, corpus=get_benchmark_corpus())
+        agent = StemAgent(
+            config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=get_benchmark_corpus()
+        )
         agent.differentiate(domain="code_quality_analysis")
 
         agent.review("def handler(x):\n    return eval(x)\n")
@@ -139,7 +141,9 @@ class TestAgentReviewInvokesTools:
             improvement_required=False,
             max_rollback_attempts=1,
         )
-        agent = StemAgent(config=config, llm=fake_llm, corpus=get_benchmark_corpus())
+        agent = StemAgent(
+            config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=get_benchmark_corpus()
+        )
         agent.differentiate(domain="code_quality_analysis")
 
         # Every specialized review during validation should have logged a
@@ -149,6 +153,9 @@ class TestAgentReviewInvokesTools:
             for d in agent.journal.get_events_by_type(EventType.DECISION)
             if d.phase == "validation_specialized_tools"
         ]
-        assert len(tool_events) == 20, (
-            f"expected one tool-invocation DECISION per benchmark sample, got {len(tool_events)}"
+        # Validation runs on partition.validation (11 samples for the canonical
+        # 19-sample CQ corpus); each gets one tool-invocation DECISION.
+        assert len(tool_events) == 11, (
+            f"expected one tool-invocation DECISION per validation-slice sample, "
+            f"got {len(tool_events)}"
         )

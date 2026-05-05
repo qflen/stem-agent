@@ -1,4 +1,4 @@
-"""Tests for the state machine — transition logic, guards, rollback.
+"""Tests for the state machine; transition logic, guards, rollback.
 
 Tests behavior, not structure. A QA automation engineer should read
 these and see: "they tested the paths that actually matter."
@@ -157,6 +157,126 @@ class TestGuardPredicates:
         )
         assert state_machine.state == AgentState.SPECIALIZED
 
+    def test_delta_below_floor_blocks(self, state_machine: StateMachine) -> None:
+        """A 0.04 lift over baseline is below the 0.05 floor; the guard fires."""
+        self._reach_validating(state_machine)
+        with pytest.raises(GuardFailedError) as exc_info:
+            state_machine.transition(
+                AgentState.SPECIALIZED,
+                context={
+                    "specialized_f1": 0.74,
+                    "baseline_f1": 0.70,
+                    "f1_threshold": 0.6,
+                    "improvement_required": True,
+                    "specialized_specificity": 1.0,
+                    "baseline_specificity": 1.0,
+                },
+            )
+        assert "improvement_over_baseline" in exc_info.value.guard_name
+
+    def test_delta_at_floor_passes(self, state_machine: StateMachine) -> None:
+        """Exactly +0.05 F1 with no specificity drop should graduate."""
+        self._reach_validating(state_machine)
+        state_machine.transition(
+            AgentState.SPECIALIZED,
+            context={
+                "specialized_f1": 0.75,
+                "baseline_f1": 0.70,
+                "f1_threshold": 0.6,
+                "improvement_required": True,
+                "specialized_specificity": 0.5,
+                "baseline_specificity": 0.5,
+            },
+        )
+        assert state_machine.state == AgentState.SPECIALIZED
+
+    def test_specificity_drop_within_tolerance_passes(self, state_machine: StateMachine) -> None:
+        """A specificity dip of -0.05 is the tolerance ceiling; still graduates."""
+        self._reach_validating(state_machine)
+        state_machine.transition(
+            AgentState.SPECIALIZED,
+            context={
+                "specialized_f1": 0.80,
+                "baseline_f1": 0.70,
+                "f1_threshold": 0.6,
+                "improvement_required": True,
+                "specialized_specificity": 0.55,
+                "baseline_specificity": 0.60,
+            },
+        )
+        assert state_machine.state == AgentState.SPECIALIZED
+
+    def test_specificity_drop_beyond_tolerance_blocks(self, state_machine: StateMachine) -> None:
+        """A specificity collapse of -0.10 trips the tolerance even with a healthy F1 lift."""
+        self._reach_validating(state_machine)
+        with pytest.raises(GuardFailedError) as exc_info:
+            state_machine.transition(
+                AgentState.SPECIALIZED,
+                context={
+                    "specialized_f1": 0.90,
+                    "baseline_f1": 0.70,
+                    "f1_threshold": 0.6,
+                    "improvement_required": True,
+                    "specialized_specificity": 0.30,
+                    "baseline_specificity": 0.50,
+                },
+            )
+        assert "improvement_over_baseline" in exc_info.value.guard_name
+
+    def test_token_budget_disabled_when_cap_none(self, state_machine: StateMachine) -> None:
+        """Default cap=None must pass even when total_tokens is enormous."""
+        self._reach_validating(state_machine)
+        state_machine.transition(
+            AgentState.SPECIALIZED,
+            context={
+                "specialized_f1": 0.9,
+                "baseline_f1": 0.5,
+                "f1_threshold": 0.6,
+                "improvement_required": True,
+                "specialized_specificity": 0.9,
+                "baseline_specificity": 0.5,
+                "token_budget_cap": None,
+                "total_tokens": 10**9,
+            },
+        )
+        assert state_machine.state == AgentState.SPECIALIZED
+
+    def test_token_budget_blocks_when_exceeded(self, state_machine: StateMachine) -> None:
+        """An explicit cap below total_tokens trips the new guard."""
+        self._reach_validating(state_machine)
+        with pytest.raises(GuardFailedError) as exc_info:
+            state_machine.transition(
+                AgentState.SPECIALIZED,
+                context={
+                    "specialized_f1": 0.9,
+                    "baseline_f1": 0.5,
+                    "f1_threshold": 0.6,
+                    "improvement_required": True,
+                    "specialized_specificity": 0.9,
+                    "baseline_specificity": 0.5,
+                    "token_budget_cap": 1000,
+                    "total_tokens": 1500,
+                },
+            )
+        assert "token_budget_under_cap" in exc_info.value.guard_name
+
+    def test_token_budget_passes_when_under_cap(self, state_machine: StateMachine) -> None:
+        self._reach_validating(state_machine)
+        state_machine.transition(
+            AgentState.SPECIALIZED,
+            context={
+                "specialized_f1": 0.9,
+                "baseline_f1": 0.5,
+                "f1_threshold": 0.6,
+                "improvement_required": True,
+                "specialized_specificity": 0.9,
+                "baseline_specificity": 0.5,
+                "token_budget_cap": 5000,
+                "total_tokens": 1500,
+            },
+        )
+        assert state_machine.state == AgentState.SPECIALIZED
+
 
 class TestRollback:
     """Rollback mechanism works correctly and respects the budget."""
@@ -236,7 +356,7 @@ class TestRollback:
             context={"rollback_count": 0, "max_rollback_attempts": 3},
         )
 
-        # Journal grew — no events were lost
+        # Journal grew; no events were lost
         assert len(journal) > events_before
 
     def test_failed_state_on_exhausted_budget(self, journal: EvolutionJournal) -> None:
@@ -246,7 +366,7 @@ class TestRollback:
         sm.transition(AgentState.DIFFERENTIATING)
         sm.transition(AgentState.VALIDATING)
 
-        # Budget exhausted — can't rollback
+        # Budget exhausted; can't rollback
         with pytest.raises(GuardFailedError):
             sm.transition(
                 AgentState.ROLLBACK,

@@ -1,0 +1,50 @@
+Review the following Python code. Report any bugs, security issues, or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}.
+
+## Code to Review
+```python
+import re
+
+# RFC 5322 simplified email validation pattern.
+# Intentionally permissive — validates syntax, not deliverability.
+# The apparent complexity is warranted by the RFC's actual grammar.
+EMAIL_PATTERN = re.compile(
+    r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+"
+    r"@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
+    r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+)
+
+
+def validate_email(email: str) -> bool:
+    """Validate email format against a simplified RFC 5322 pattern.
+
+    Returns True if the email has valid syntax. Does not check
+    whether the domain exists or the mailbox is deliverable.
+    """
+    if not email or len(email) > 254:
+        return False
+    return EMAIL_PATTERN.match(email) is not None
+
+
+def extract_emails(text: str) -> list[str]:
+    """Extract all valid email addresses from a block of text."""
+    candidates = re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", text)
+    return [c for c in candidates if validate_email(c)]
+
+```

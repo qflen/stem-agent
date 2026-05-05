@@ -1,0 +1,38 @@
+Review the following Python code. Report any bugs, security issues, or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}.
+
+## Code to Review
+```python
+def calculate_shipping(weight: float, distance: float, express: bool) -> float:
+    """Calculate shipping cost."""
+    base = weight * 2.35
+    if distance > 500:
+        base *= 1.45
+    elif distance > 100:
+        base *= 1.15
+    if express:
+        base *= 1.75
+    if base < 4.99:
+        base = 4.99
+    if base > 299.99:
+        base = 299.99
+    tax = base * 0.08875
+    return round(base + tax, 2)
+
+```

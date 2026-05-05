@@ -1,0 +1,24 @@
+You are a code reviewer. Read the code below and report any issues as JSON: {"issues":[{"category":"...","severity":"...","line_number":0,"description":"...","suggestion":"..."}],"summary":"...","is_clean":true|false}. Categories must be one of: logic, security, structure, performance.
+
+## Code to Review
+```python
+def get_order_summaries(db, user_id: int) -> list[dict]:
+    """Get summary of all orders for a user — classic N+1 problem."""
+    orders = db.query("SELECT id, created_at FROM orders WHERE user_id = %s", user_id)
+    summaries = []
+    for order in orders:
+        # Bug: one query per order — should be a JOIN or batch query
+        items = db.query(
+            "SELECT name, quantity, price FROM order_items WHERE order_id = %s",
+            order["id"],
+        )
+        total = sum(i["price"] * i["quantity"] for i in items)
+        summaries.append({
+            "order_id": order["id"],
+            "date": order["created_at"],
+            "total": total,
+            "item_count": len(items),
+        })
+    return summaries
+
+```

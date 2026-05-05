@@ -1,0 +1,42 @@
+Review the following Python code. Report any bugs, security issues, or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}.
+
+## Code to Review
+```python
+import requests
+
+API_KEY = "sk-proj-a8f3k29d1m4n5p6q7r8s9t0u"
+DB_PASSWORD = "super_secret_production_pw_2024"
+
+def fetch_data(endpoint: str) -> dict:
+    """Fetch data from the external API."""
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    response = requests.get(endpoint, headers=headers)
+    return response.json()
+
+def get_db_connection():
+    """Connect to the production database."""
+    import psycopg2
+    return psycopg2.connect(
+        host="db.production.internal",
+        password=DB_PASSWORD,
+        user="admin",
+    )
+
+```

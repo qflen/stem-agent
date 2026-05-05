@@ -29,7 +29,7 @@ from stem_agent.phases.capability_generation import (
     ProposedCapability,
 )
 from stem_agent.phases.sensing import DomainKnowledge
-from tests.conftest import FakeLLM
+from tests.conftest import FakeLLM, InMemoryStorage
 
 
 def _sensing_context() -> dict[str, Any]:
@@ -167,7 +167,7 @@ class TestCapabilityGenerationPhase:
         llm = _ProposalLLM(
             {
                 "name": "broken_proposal",
-                "description": "Invalid validator — should be rejected",
+                "description": "Invalid validator; should be rejected",
                 "prompt_fragment": "## broken\n- n/a",
                 "validator_code": "def check(code:\n    return []\n",
             }
@@ -194,7 +194,7 @@ class TestCapabilityGenerationPhase:
         llm = _ProposalLLM(
             {
                 "name": "filesystem_probe",
-                "description": "Hostile — tries to exfiltrate files",
+                "description": "Hostile; tries to exfiltrate files",
                 "prompt_fragment": "## Hostile\n- never admitted",
                 "validator_code": ("def check(code):\n    return [open('/etc/passwd').read()]\n"),
             }
@@ -266,25 +266,91 @@ class TestCapabilityGenerationPhase:
 class TestGeneratedCapabilityReachesPrompt:
     """After a full differentiation run the generated fragment is in the prompt."""
 
-    def test_fragment_spliced_into_system_prompt(self, fake_llm: FakeLLM) -> None:
+    def test_proposal_rejected_when_holdout_arms_tie(self, fake_llm: FakeLLM) -> None:
+        """With FakeLLM symmetric on both arms, the empirical gate rejects."""
         config = StemAgentConfig(
             openai_api_key="test-key",
             f1_threshold=0.0,
             improvement_required=False,
             max_rollback_attempts=1,
         )
-        agent = StemAgent(config=config, llm=fake_llm, corpus=get_benchmark_corpus())
+        agent = StemAgent(
+            config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=get_benchmark_corpus()
+        )
+        assert agent.differentiate(domain="code_quality_analysis") is True
+
+        assert agent.agent_config is not None
+        assert "input_validation_gap" not in agent.agent_config.capabilities
+        assert "Input Validation Gap Pass" not in agent.agent_config.system_prompt
+
+        decisions = agent.journal.get_events_by_type(EventType.DECISION)
+        rejection = [
+            d for d in decisions if "rejected by empirical holdout" in d.data["decision"].lower()
+        ]
+        assert rejection, "expected a holdout rejection in the journal"
+
+    def test_proposal_admitted_when_marker_aware_llm_strictly_helps(
+        self, fake_llm: FakeLLM
+    ) -> None:
+        """A marker-aware LLM that sabotages the without-arm should pass the gate."""
+
+        class _MarkerAwareLLM:
+            last_usage: dict[str, int] | None = None
+
+            def __init__(self, inner: FakeLLM) -> None:
+                self._inner = inner
+                self.calls = inner.calls
+
+            def generate(self, prompt: str, *, model: str | None = None) -> str:
+                if "Input Validation Gap Pass" not in prompt and "calculate_shipping" in prompt:
+                    self.last_usage = {
+                        "prompt_tokens": 10,
+                        "completion_tokens": 10,
+                        "total_tokens": 20,
+                    }
+                    return '{"issues": [], "summary": "Looks fine.", "is_clean": true}'
+                response = self._inner.generate(prompt, model=model)
+                self.last_usage = self._inner.last_usage
+                return response
+
+            def structured_generate(
+                self,
+                prompt: str,
+                response_model,
+                *,
+                model: str | None = None,
+            ):
+                result = self._inner.structured_generate(prompt, response_model, model=model)
+                self.last_usage = self._inner.last_usage
+                return result
+
+        wrapped = _MarkerAwareLLM(fake_llm)
+        config = StemAgentConfig(
+            openai_api_key="test-key",
+            f1_threshold=0.0,
+            improvement_required=False,
+            max_rollback_attempts=1,
+        )
+        agent = StemAgent(
+            config=config,
+            llm=wrapped,
+            storage=InMemoryStorage(),
+            corpus=get_benchmark_corpus(),
+        )
         assert agent.differentiate(domain="code_quality_analysis") is True
 
         assert agent.agent_config is not None
         assert "Input Validation Gap Pass" in agent.agent_config.system_prompt
         assert "input_validation_gap" in agent.agent_config.capabilities
 
-        # The journal records the generation as a distinct phase result.
         phase_results = agent.journal.get_events_by_type(EventType.PHASE_RESULT)
-        generation_results = [e for e in phase_results if e.phase == "capability_generation"]
-        assert generation_results
-        assert generation_results[0].data["origin"] == "generated"
+        gen_results = [e for e in phase_results if e.phase == "capability_generation"]
+        admitted = [e for e in gen_results if e.data.get("holdout_outcome") == "admitted"]
+        assert admitted, "expected an admitted holdout outcome"
+        assert (
+            admitted[0].data["arm_with_proposal_correct"]
+            > admitted[0].data["arm_without_proposal_correct"]
+        )
 
     def test_hostile_proposal_leaves_registry_unchanged(
         self, hostile_capability_llm: FakeLLM
@@ -296,10 +362,14 @@ class TestGeneratedCapabilityReachesPrompt:
             improvement_required=False,
             max_rollback_attempts=1,
         )
-        agent = StemAgent(config=config, llm=hostile_capability_llm, corpus=get_benchmark_corpus())
+        agent = StemAgent(
+            config=config,
+            llm=hostile_capability_llm,
+            storage=InMemoryStorage(),
+            corpus=get_benchmark_corpus(),
+        )
         agent.differentiate(domain="code_quality_analysis")
 
-        # The hostile proposal must not land as a capability.
         assert agent.agent_config is not None
         assert "filesystem_probe" not in agent.agent_config.capabilities
         assert "open" not in agent.agent_config.system_prompt
@@ -311,6 +381,52 @@ class TestGeneratedCapabilityReachesPrompt:
             if "filesystem_probe" in d.data["decision"] and "rejected" in d.data["decision"].lower()
         ]
         assert blocked, "journal must record the sandbox rejection"
+
+    def test_holdout_skipped_for_overlapping_partition(self, fake_llm: FakeLLM) -> None:
+        """Security corpus partition is overlapping; the gate must bypass."""
+        from stem_agent.evaluation.fixtures.security_audit_samples import (
+            get_security_audit_corpus,
+        )
+
+        config = StemAgentConfig(
+            openai_api_key="test-key",
+            f1_threshold=0.0,
+            improvement_required=False,
+            max_rollback_attempts=1,
+        )
+        agent = StemAgent(
+            config=config,
+            llm=fake_llm,
+            storage=InMemoryStorage(),
+            corpus=get_security_audit_corpus(),
+        )
+        agent.differentiate(domain="security_audit")
+        decisions = agent.journal.get_events_by_type(EventType.DECISION)
+        bypass = [
+            d for d in decisions if "bypassed empirical holdout" in d.data["decision"].lower()
+        ]
+        assert bypass, "expected a journal record of the holdout bypass"
+
+
+class TestEmpiricalHoldoutPasses:
+    """Direct unit coverage for the gate's bypass/admit/reject branches."""
+
+    def test_bypass_when_partition_missing(self) -> None:
+        from stem_agent.phases.capability_generation import (
+            ProposedCapability,
+            _empirical_holdout_passes,
+        )
+
+        proposal = ProposedCapability(
+            name="x",
+            description="x",
+            prompt_fragment="## X\n",
+            validator_code=None,
+        )
+        journal = EvolutionJournal()
+        assert _empirical_holdout_passes(proposal, FakeLLM(), {}, journal, "phase") is True
+        decisions = journal.get_events_by_type(EventType.DECISION)
+        assert any("bypassed" in d.data["decision"].lower() for d in decisions)
 
 
 class TestProposedCapabilityModel:

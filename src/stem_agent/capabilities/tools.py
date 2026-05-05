@@ -1,4 +1,4 @@
-"""Tool adapters — concrete analysis tools the agent can use during review.
+"""Tool adapters; concrete analysis tools the agent can use during review.
 
 These are lightweight wrappers around Python stdlib capabilities
 (ast module, re, etc.) that the agent can optionally incorporate
@@ -114,12 +114,12 @@ SECURITY_PATTERNS: list[tuple[str, str, str]] = [
     ),
     (
         r"eval\s*\(",
-        "Use of eval() — potential code injection",
+        "Use of eval(); potential code injection",
         "security",
     ),
     (
         r"exec\s*\(",
-        "Use of exec() — potential code injection",
+        "Use of exec(); potential code injection",
         "security",
     ),
     (
@@ -129,17 +129,17 @@ SECURITY_PATTERNS: list[tuple[str, str, str]] = [
     ),
     (
         r"os\.system\s*\(",
-        "Use of os.system — prefer subprocess with shell=False",
+        "Use of os.system; prefer subprocess with shell=False",
         "security",
     ),
     (
         r"subprocess\..*shell\s*=\s*True",
-        "subprocess with shell=True — potential command injection",
+        "subprocess with shell=True; potential command injection",
         "security",
     ),
     (
         r"pickle\.loads?\s*\(",
-        "Use of pickle — potential insecure deserialization",
+        "Use of pickle; potential insecure deserialization",
         "security",
     ),
 ]

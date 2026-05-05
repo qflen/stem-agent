@@ -1,0 +1,114 @@
+You are helping an AI agent understand the domain of code_quality_analysis.
+
+The agent has run two deterministic tools — an AST analyser and a regex
+pattern scanner — over four unlabelled probe snippets from the corpus.
+The aggregated hit-count by tool category is:
+
+structure: 1
+
+Below are the probe snippets the agent will rely on as ground for its
+strategy choice:
+
+### probe_1 — clean_01
+static_signal: functions=2 max_len=10 max_depth=2; patterns: no scanner hits
+```python
+def find_first_long_line(lines: list[str], threshold: int = 80) -> str | None:
+    """Find the first line exceeding the threshold length.
+
+    Uses the walrus operator (:=) for concise filtered-first semantics.
+    This looks like an assignment-in-condition bug but is idiomatic Python 3.8+.
+    """
+    for line in lines:
+        if (stripped := line.strip()) and len(stripped) > threshold:
+            return stripped
+    return None
+
+
+def process_chunks(data: bytes, chunk_size: int = 4096) -> list[bytes]:
+    """Process data in chunks using walrus operator in while loop."""
+    chunks = []
+    
+# ... (truncated)
+```
+
+### probe_2 — clean_05
+static_signal: functions=2 max_len=31 max_depth=4; patterns: no scanner hits
+```python
+from collections import defaultdict
+from typing import TypeAlias
+
+# Type aliases for readability
+Graph: TypeAlias = dict[str, list[str]]
+Components: TypeAlias = list[set[str]]
+
+
+def find_connected_components(graph: Graph) -> Components:
+    """Find all connected components in an undirected graph using BFS.
+
+    The nested comprehension for building the adjacency set looks complex
+    but is standard graph algorithm boilerplate — not a code smell.
+    """
+    visited: set[str] = set()
+    components: Components = []
+
+    # Build bidirectional adjacency for undirected graph
+    adjacency: dict[s
+# ... (truncated)
+```
+
+### probe_3 — logic_03
+static_signal: functions=1 max_len=4 max_depth=0; patterns: no scanner hits
+```python
+def get_user_email(users: dict[str, dict], username: str) -> str:
+    """Look up a user's email by username."""
+    user = users.get(username)
+    return user["email"]  # Bug: user could be None
+```
+
+### probe_4 — perf_02
+static_signal: functions=1 max_len=14 max_depth=3; patterns: no scanner hits
+```python
+def find_common_elements(lists: list[list[int]]) -> list[int]:
+    """Find elements common to all input lists."""
+    if not lists:
+        return []
+    # Bug: creates a full copy on every iteration for no reason
+    result = list(lists[0])
+    for lst in lists[1:]:
+        temp = list(result)  # Unnecessary copy
+        result = []
+        lookup = list(lst)  # Should use set for O(1) lookup
+        for item in temp:
+            if item in lookup:  # O(n) lookup instead of O(1) with set
+                result.append(item)
+    return result
+```
+
+Given these probes and these tool-hit signals, design the agent's
+specialization plan:
+
+1. **Review strategies**: which approaches catch the most issues that
+   *these* snippets exemplify? Order by impact for this corpus.
+2. **Issue taxonomy**: name 3-5 categories with 3-5 specific issues each
+   that the corpus hints at.
+3. **Tool categories**: which tools are likely to fire most often here?
+   Match them to the static signals above.
+4. **Output format patterns**: what does an actionable review look like
+   for this domain?
+5. **Key insights**: non-obvious things that separate expert analysis
+   from naive analysis on *this* kind of code.
+
+Respond with a JSON object matching this structure:
+{
+  "domain_name": "code_quality_analysis",
+  "review_strategies": ["strategy1", "strategy2", ...],
+  "issue_taxonomy": {
+    "category1": ["issue_type1", "issue_type2", ...],
+    "category2": [...]
+  },
+  "tool_categories": ["tool1", "tool2", ...],
+  "output_format_patterns": ["pattern1", "pattern2", ...],
+  "key_insights": ["insight1", "insight2", ...]
+}
+
+Be specific. This knowledge directly shapes the agent's capability set.

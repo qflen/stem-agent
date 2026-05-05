@@ -1,0 +1,17 @@
+{
+  "domain": "security_audit",
+  "kappa": 0.0,
+  "ci_lo": 0.0,
+  "ci_hi": 1.0,
+  "disputed": 2,
+  "labels": {
+    "sec_audit_01": "security",
+    "sec_audit_02": "security",
+    "sec_audit_03": "security",
+    "sec_audit_04": "security",
+    "sec_audit_05": "security",
+    "sec_audit_06": "security",
+    "sec_audit_07": "security",
+    "sec_audit_08": "security"
+  }
+}

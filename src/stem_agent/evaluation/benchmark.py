@@ -1,4 +1,4 @@
-"""Benchmark runner — feeds code samples through an agent and collects verdicts.
+"""Benchmark runner; feeds code samples through an agent and collects verdicts.
 
 The runner is agent-agnostic: it takes a review function and a corpus,
 runs each sample, and computes metrics. This lets us benchmark both
@@ -14,6 +14,10 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from stem_agent.capabilities.dispatcher import (
+    ReviewDispatcher,
+    format_dispatcher_findings,
+)
 from stem_agent.capabilities.tools import (
     PatternMatch,
     StructuralMetrics,
@@ -207,7 +211,7 @@ def format_tool_findings(metrics: StructuralMetrics | None, patterns: list[Patte
     """Render static-analysis output as a compact context block for the LLM.
 
     Kept deliberately short: the specialized agent does not need a full
-    AST dump, it needs the few facts that discipline its confidence —
+    AST dump, it needs the few facts that discipline its confidence;
     whether the code parsed at all, how long the longest function is,
     how deep the nesting goes, and what the regex scanner caught.
     """
@@ -238,6 +242,7 @@ def make_llm_review_fn(
     journal: EvolutionJournal | None = None,
     phase: str = "validation",
     use_tools: bool = False,
+    dispatcher: ReviewDispatcher | None = None,
 ) -> ReviewFunction:
     """Create a review function backed by an LLM adapter.
 
@@ -248,15 +253,11 @@ def make_llm_review_fn(
     tools (``analyze_structure`` and ``scan_patterns``) are invoked on
     the code before the LLM is called, their output is injected into the
     prompt as a ``## Static Tool Findings`` block, and each invocation
-    is recorded as a ``DECISION`` event. This is the specialized path —
-    the baseline stays untooled so the A/B comparison remains fair.
-
-    Args:
-        llm: An LLM adapter satisfying the LLMPort protocol.
-        model: Optional model override.
-        journal: If provided, log every review call to this journal.
-        phase: Phase name attached to the logged event.
-        use_tools: If True, invoke static analysis tools before the LLM.
+    is recorded as a ``DECISION`` event. The optional ``dispatcher`` runs
+    every admitted generated-capability validator on the code and appends
+    a ``## Generated Check Findings`` block to the same tool section.
+    Both surfaces are specialized-only; the baseline stays untooled so
+    the A/B comparison remains a comparison of judgement, not tooling.
 
     Returns:
         A ReviewFunction compatible with run_benchmark.
@@ -268,13 +269,18 @@ def make_llm_review_fn(
             metrics = analyze_structure(code)
             patterns = scan_patterns(code)
             tool_block = format_tool_findings(metrics, patterns) + "\n\n"
+            generated_findings: list[Any] = []
+            if dispatcher is not None:
+                generated_findings = dispatcher.run(code)
+                tool_block += format_dispatcher_findings(generated_findings) + "\n"
             if journal is not None:
                 journal.log_decision(
                     phase=f"{phase}_tools",
                     decision="Invoked analyze_structure and scan_patterns before review",
                     reasoning=(
                         f"ast={'parsed' if metrics is not None else 'parse_failed'}, "
-                        f"pattern_matches={len(patterns)}"
+                        f"pattern_matches={len(patterns)}, "
+                        f"dispatcher_findings={len(generated_findings)}"
                     ),
                 )
         full_prompt = f"{system_prompt}\n\n{tool_block}## Code to Review\n```python\n{code}\n```"

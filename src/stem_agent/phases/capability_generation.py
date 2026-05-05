@@ -1,14 +1,14 @@
-"""Capability generation — the stem-cell move.
+"""Capability generation; the stem-cell move.
 
 The registry-only path is a capability composer: it picks from a
-pre-authored catalog. The stem metaphor asks for more — the agent
+pre-authored catalog. The stem metaphor asks for more; the agent
 should be able to propose a capability it does not yet have. That is
 what this phase does.
 
 Between sensing and the first planning pass, the agent queries the LLM
 for ONE new capability that targets a gap in the existing registry. The
 proposal carries three things: a ``name``, a ``prompt_fragment`` to
-splice into the composed system prompt, and — optionally — a short
+splice into the composed system prompt, and; optionally; a short
 Python ``check`` function used as a deterministic sanity net at review
 time. The Python code is validated through the sandbox in
 ``capabilities/sandbox.py`` before it can reach the registry:
@@ -39,8 +39,20 @@ from stem_agent.capabilities.registry import (
 )
 from stem_agent.capabilities.sandbox import SandboxResult, run_in_sandbox
 from stem_agent.core.journal import EvolutionJournal
+from stem_agent.evaluation.benchmark import normalize_category, parse_review_response
+from stem_agent.evaluation.fixtures.code_samples import (
+    BenchmarkSample,
+    CorpusPartition,
+)
 from stem_agent.phases.sensing import DomainKnowledge
 from stem_agent.ports.llm import LLMPort
+
+_HOLDOUT_BASELINE_PROMPT = (
+    "You are a code reviewer. Read the code below and report any issues as JSON: "
+    '{"issues":[{"category":"...","severity":"...","line_number":0,"description":"...",'
+    '"suggestion":"..."}],"summary":"...","is_clean":true|false}. '
+    "Categories must be one of: logic, security, structure, performance."
+)
 
 
 class ProposedCapability(BaseModel):
@@ -104,6 +116,93 @@ def _format_insights(knowledge: DomainKnowledge) -> str:
     return "\n".join(f"- {line}" for line in knowledge.key_insights[:5]) or "- (none)"
 
 
+def _holdout_correctness(
+    llm: LLMPort,
+    samples: list[BenchmarkSample],
+    *,
+    fragment: str,
+    model: str | None,
+) -> int:
+    """Score one arm; count of samples whose verdict matches truth exactly."""
+    system_prompt = _HOLDOUT_BASELINE_PROMPT + fragment
+    correct = 0
+    for sample in samples:
+        prompt = f"{system_prompt}\n\n## Code to Review\n```python\n{sample.code}\n```"
+        raw = llm.generate(prompt, model=model)
+        parsed = parse_review_response(raw)
+        det_cats = {normalize_category(issue.category) for issue in parsed.issues}
+        truth_cats = {normalize_category(c) for c in sample.issue_categories}
+        if parsed.is_clean == sample.is_clean and det_cats == truth_cats:
+            correct += 1
+    return correct
+
+
+def _empirical_holdout_passes(
+    proposal: ProposedCapability,
+    llm: LLMPort,
+    context: dict[str, Any],
+    journal: EvolutionJournal,
+    phase: str,
+) -> bool:
+    """Run the 4-sample A/B and decide whether to admit the proposal.
+
+    Returns True iff the with-proposal arm strictly out-scores the
+    without-proposal arm. When the partition is too small or marked
+    overlapping, the gate is bypassed and a DECISION event records why,
+    so reviewers can tell "admitted because passed" from "admitted
+    because gate could not run".
+    """
+    partition_obj: CorpusPartition | None = context.get("partition")
+    if partition_obj is None or partition_obj.overlapping or len(partition_obj.holdout) < 2:
+        journal.log_decision(
+            phase=phase,
+            decision=(
+                f"Proposal '{proposal.name}' bypassed empirical holdout: "
+                "partition too small or overlapping"
+            ),
+            reasoning=(
+                "no partition"
+                if partition_obj is None
+                else f"overlapping={partition_obj.overlapping} holdout_size="
+                f"{len(partition_obj.holdout)}"
+            ),
+        )
+        return True
+
+    holdout_samples = list(partition_obj.holdout)
+    model = context.get("planning_model")
+    with_score = _holdout_correctness(
+        llm, holdout_samples, fragment=proposal.prompt_fragment, model=model
+    )
+    without_score = _holdout_correctness(llm, holdout_samples, fragment="", model=model)
+
+    journal.log_phase_result(
+        phase=phase,
+        result={
+            "holdout_outcome": "admitted" if with_score > without_score else "rejected_by_holdout",
+            "holdout_size": len(holdout_samples),
+            "arm_with_proposal_correct": with_score,
+            "arm_without_proposal_correct": without_score,
+            "proposal_name": proposal.name,
+        },
+    )
+
+    if with_score > without_score:
+        journal.log_decision(
+            phase=phase,
+            decision=f"Proposal '{proposal.name}' passed empirical holdout",
+            reasoning=f"arm_a={with_score} > arm_b={without_score} on {len(holdout_samples)}",
+        )
+        return True
+
+    journal.log_decision(
+        phase=phase,
+        decision=f"Proposal '{proposal.name}' rejected by empirical holdout",
+        reasoning=f"arm_a={with_score} ≤ arm_b={without_score} on {len(holdout_samples)}",
+    )
+    return False
+
+
 class CapabilityGenerationPhase:
     """Propose, validate, and admit one brand-new capability per run."""
 
@@ -144,7 +243,7 @@ class CapabilityGenerationPhase:
         except (ValidationError, ValueError, KeyError) as exc:
             journal.log_decision(
                 phase=self.name,
-                decision="No capability proposed — falling back to composition-only",
+                decision="No capability proposed; falling back to composition-only",
                 reasoning=f"LLM did not return a valid proposal ({type(exc).__name__})",
             )
             context["registry"] = registry
@@ -161,7 +260,7 @@ class CapabilityGenerationPhase:
         if not isinstance(proposal, ProposedCapability):
             journal.log_decision(
                 phase=self.name,
-                decision="Proposal rejected — wrong model type",
+                decision="Proposal rejected; wrong model type",
                 reasoning=f"expected ProposedCapability, got {type(proposal).__name__}",
             )
             context["registry"] = registry
@@ -187,6 +286,10 @@ class CapabilityGenerationPhase:
                 )
                 context["registry"] = registry
                 return context
+
+        if not _empirical_holdout_passes(proposal, llm, context, journal, self.name):
+            context["registry"] = registry
+            return context
 
         capability = Capability(
             name=proposal.name,

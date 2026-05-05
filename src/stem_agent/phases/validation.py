@@ -1,4 +1,4 @@
-"""Validation phase — benchmark-driven fitness check with regression gates.
+"""Validation phase; benchmark-driven fitness check with regression gates.
 
 Runs the full benchmark suite through both the undifferentiated baseline
 and the specialized agent, computes metrics, and evaluates guard conditions.
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from stem_agent.capabilities.dispatcher import maybe_make_dispatcher
 from stem_agent.capabilities.tools import analyze_structure, scan_patterns
 from stem_agent.core.journal import EvolutionJournal
 from stem_agent.evaluation.benchmark import (
@@ -75,12 +76,15 @@ class ValidationPhase:
             # Allow injection for testing
             review_fn = context["review_fn"]
         else:
+            registry = context.get("registry")
+            dispatcher = maybe_make_dispatcher(registry) if registry is not None else None
             review_fn = make_llm_review_fn(
                 llm,
                 model=agent_config.model,
                 journal=journal,
                 phase=f"{self.name}_specialized",
                 use_tools=True,
+                dispatcher=dispatcher,
             )
 
         baseline_fn: ReviewFunction
@@ -98,7 +102,7 @@ class ValidationPhase:
         journal.log_decision(
             phase=self.name,
             decision="Running baseline evaluation",
-            reasoning="Undifferentiated agent with generic prompt — this is the control",
+            reasoning="Undifferentiated agent with generic prompt; this is the control",
         )
         baseline_verdicts, baseline_metrics = run_benchmark(
             baseline_fn,
@@ -186,6 +190,8 @@ class ValidationPhase:
         context["comparison"] = comparison
         context["baseline_f1"] = baseline_metrics.f1
         context["specialized_f1"] = specialized_metrics.f1
+        context["baseline_specificity"] = baseline_metrics.specificity
+        context["specialized_specificity"] = specialized_metrics.specificity
         return context
 
 
@@ -201,11 +207,11 @@ def cross_check_verdicts(
     For each sample we check two narrow, high-signal cases:
 
     * the LLM flagged a ``structure`` issue, but the code is a short,
-      shallow function — likely a false positive, so the reviewer
+      shallow function; likely a false positive, so the reviewer
       should discount that category for that sample;
     * the pattern scanner found a security match (hardcoded secret,
       ``eval``, SQL-string-concat) but the LLM did not flag
-      ``security`` — likely a false negative the regex caught.
+      ``security``; likely a false negative the regex caught.
 
     Disagreements are recorded as ``DECISION`` events so they show up
     in the audit trail next to the LLM call that produced the verdict.
@@ -264,6 +270,25 @@ def cross_check_verdicts(
     return disagreements
 
 
+def diagnose_summary(context: dict[str, Any]) -> str:
+    """One-line description of the latest attempt; what older history collapses to.
+
+    Read by ``SpecializationPhase`` when it caps how many full rollback
+    attempts the next prompt carries (K=3); older attempts shrink to
+    this string so the prompt size doesn't grow unboundedly across a
+    long rollback chain.
+    """
+    comparison: ComparisonResult | None = context.get("comparison")
+    if comparison is None:
+        return "no comparison recorded"
+    return (
+        f"specialized_F1={comparison.specialized.f1:.3f} vs "
+        f"baseline_F1={comparison.baseline.f1:.3f} "
+        f"(Δ={comparison.f1_delta:+.3f}, "
+        f"specificity={comparison.specialized.specificity:.3f})"
+    )
+
+
 def diagnose_failure(
     context: dict[str, Any],
     journal: EvolutionJournal,
@@ -288,25 +313,25 @@ def diagnose_failure(
 
     if comparison.specialized.precision < comparison.baseline.precision:
         adjustments.append(
-            "Reduce false positive rate — add instruction to only flag issues "
+            "Reduce false positive rate; add instruction to only flag issues "
             "when confident, avoid flagging clean/correct code"
         )
 
     if comparison.specialized.recall < comparison.baseline.recall:
         adjustments.append(
-            "Improve issue detection — ensure all review passes are thorough "
+            "Improve issue detection; ensure all review passes are thorough "
             "and cover the full range of issue types in the taxonomy"
         )
 
     if comparison.specialized.specificity < comparison.baseline.specificity:
         adjustments.append(
-            "Improve clean code recognition — add explicit instruction to verify "
+            "Improve clean code recognition; add explicit instruction to verify "
             "that flagged issues are real, not false alarms on correct patterns"
         )
 
     if comparison.f1_delta <= 0:
         adjustments.append(
-            "Specialization did not improve over baseline — simplify the prompt "
+            "Specialization did not improve over baseline; simplify the prompt "
             "to reduce confusion and focus on the most impactful review passes"
         )
 
@@ -314,7 +339,7 @@ def diagnose_failure(
 
     if not adjustments:
         adjustments.append(
-            "Metrics below threshold but no specific degradation pattern identified — "
+            "Metrics below threshold but no specific degradation pattern identified; "
             "try more targeted review passes with clearer instructions"
         )
 
@@ -334,7 +359,7 @@ def _adjustments_from_cross_check(context: dict[str, Any]) -> list[str]:
     The validation phase already records every disagreement between the
     LLM and the deterministic checks; here we read them back and produce
     one adjustment per failure mode, quantified by how many samples
-    tripped it. This is the closed loop — the agent's next attempt is
+    tripped it. This is the closed loop; the agent's next attempt is
     shaped by where it actually got things wrong.
     """
     disagreements: list[dict[str, Any]] = context.get("cross_check_disagreements") or []

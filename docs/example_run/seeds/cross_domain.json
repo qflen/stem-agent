@@ -1,0 +1,34 @@
+[
+  {
+    "prompt_domain": "code_quality_analysis",
+    "corpus_domain": "code_quality_analysis",
+    "precision": 0.5,
+    "recall": 1.0,
+    "f1": 0.6666666666666666,
+    "specificity": 0.1111111111111111
+  },
+  {
+    "prompt_domain": "code_quality_analysis",
+    "corpus_domain": "security_audit",
+    "precision": 0.42857142857142855,
+    "recall": 1.0,
+    "f1": 0.6,
+    "specificity": 0.0
+  },
+  {
+    "prompt_domain": "security_audit",
+    "corpus_domain": "code_quality_analysis",
+    "precision": 0.5,
+    "recall": 0.875,
+    "f1": 0.6363636363636364,
+    "specificity": 0.0
+  },
+  {
+    "prompt_domain": "security_audit",
+    "corpus_domain": "security_audit",
+    "precision": 0.75,
+    "recall": 1.0,
+    "f1": 0.8571428571428571,
+    "specificity": 0.0
+  }
+]

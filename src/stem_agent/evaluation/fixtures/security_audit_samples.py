@@ -1,4 +1,4 @@
-"""Security-audit corpus — 8 Python samples for the second-domain demo.
+"""Security-audit corpus; 8 Python samples for the second-domain demo.
 
 This fixture exists to prove the differentiation pipeline is not wired
 only for generic code-quality review. The samples are all security-
@@ -92,7 +92,7 @@ def hash_password(password: str) -> str:
 
 SEC_AUDIT_07_CLEAN_SUBPROCESS = BenchmarkSample(
     sample_id="sec_audit_07",
-    description="Clean subprocess call with arg list — looks like shell=True but isn't",
+    description="Clean subprocess call with arg list; looks like shell=True but isn't",
     code="""\
 import subprocess
 
@@ -108,7 +108,7 @@ def run_git_log(path: str) -> str:
 
 SEC_AUDIT_08_CLEAN_SAFE_EVAL = BenchmarkSample(
     sample_id="sec_audit_08",
-    description="eval gated behind a strict whitelist — safe in practice",
+    description="eval gated behind a strict whitelist; safe in practice",
     code="""\
 import ast
 

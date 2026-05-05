@@ -1,4 +1,4 @@
-"""Evaluation metrics — precision, recall, F1, specificity.
+"""Evaluation metrics; precision, recall, F1, specificity.
 
 Handles edge cases a QA engineer would check: empty inputs,
 perfect scores, zero detection, all false positives.

@@ -1,0 +1,49 @@
+Review the following Python code. Report any bugs, security issues, or code quality problems you find. If the code looks correct, say so.
+
+## Output Format
+Respond with a JSON object matching this structure:
+{
+  "issues": [
+    {
+      "category": "logic|security|structure|performance|style",
+      "severity": "critical|high|medium|low",
+      "line_number": <int>,
+      "description": "<what is wrong>",
+      "suggestion": "<how to fix it>"
+    }
+  ],
+  "summary": "<brief overall assessment>",
+  "is_clean": <true if no issues found, false otherwise>
+}
+If no issues are found, return {"issues": [], "summary": "...", "is_clean": true}.
+
+## Code to Review
+```python
+def classify_risk(score: float, age: int, history: list) -> str:
+    """Classify customer risk level."""
+    if score > 0:
+        if age >= 18:
+            if len(history) > 0:
+                if score > 750:
+                    if age < 65:
+                        return "low"
+                    else:
+                        if len(history) > 10:
+                            return "low"
+                        else:
+                            return "medium"
+                elif score > 600:
+                    if len(history) > 5:
+                        return "medium"
+                    else:
+                        return "high"
+                else:
+                    return "high"
+            else:
+                return "high"
+        else:
+            return "rejected"
+    else:
+        return "invalid"
+
+```

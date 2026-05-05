@@ -1,4 +1,4 @@
-"""Integration tests — the crown jewel.
+"""Integration tests; the crown jewel.
 
 Full differentiation pipeline with FakeLLM → deterministic, fast, no API calls.
 Verifies the agent transitions through all states, the journal contains
@@ -14,7 +14,7 @@ from stem_agent.core.config import StemAgentConfig
 from stem_agent.core.journal import EventType
 from stem_agent.core.state_machine import AgentState
 from stem_agent.evaluation.fixtures.code_samples import get_benchmark_corpus
-from tests.conftest import FakeLLM
+from tests.conftest import FakeLLM, InMemoryStorage
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ class TestFullDifferentiationPipeline:
 
     def test_successful_differentiation(self, config: StemAgentConfig, fake_llm: FakeLLM) -> None:
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=fake_llm, corpus=corpus)
+        agent = StemAgent(config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=corpus)
 
         assert agent.state == AgentState.UNDIFFERENTIATED
         success = agent.differentiate(domain="code_quality_analysis")
@@ -44,7 +44,7 @@ class TestFullDifferentiationPipeline:
         self, config: StemAgentConfig, fake_llm: FakeLLM
     ) -> None:
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=fake_llm, corpus=corpus)
+        agent = StemAgent(config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=corpus)
         agent.differentiate(domain="code_quality_analysis")
 
         journal = agent.journal
@@ -66,7 +66,7 @@ class TestFullDifferentiationPipeline:
         self, config: StemAgentConfig, fake_llm: FakeLLM
     ) -> None:
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=fake_llm, corpus=corpus)
+        agent = StemAgent(config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=corpus)
         agent.differentiate(domain="code_quality_analysis")
 
         journal = agent.journal
@@ -86,7 +86,7 @@ class TestSpecializedAgentOutput:
         self, config: StemAgentConfig, fake_llm: FakeLLM
     ) -> None:
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=fake_llm, corpus=corpus)
+        agent = StemAgent(config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=corpus)
         agent.differentiate(domain="code_quality_analysis")
 
         code = "def foo():\n    return 1 + 1"
@@ -99,7 +99,7 @@ class TestSpecializedAgentOutput:
     def test_review_before_differentiation_raises(
         self, config: StemAgentConfig, fake_llm: FakeLLM
     ) -> None:
-        agent = StemAgent(config=config, llm=fake_llm)
+        agent = StemAgent(config=config, llm=fake_llm, storage=InMemoryStorage())
         with pytest.raises(RuntimeError, match="not been specialized"):
             agent.review("def foo(): pass")
 
@@ -116,7 +116,9 @@ class TestRollbackMechanism:
             max_rollback_attempts=2,
         )
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent = StemAgent(
+            config=config, llm=poor_fake_llm, storage=InMemoryStorage(), corpus=corpus
+        )
 
         # Should fail after exhausting rollback budget
         success = agent.differentiate(domain="code_quality_analysis")
@@ -135,7 +137,9 @@ class TestRollbackMechanism:
             max_rollback_attempts=2,
         )
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent = StemAgent(
+            config=config, llm=poor_fake_llm, storage=InMemoryStorage(), corpus=corpus
+        )
         agent.differentiate(domain="code_quality_analysis")
 
         journal = agent.journal
@@ -152,7 +156,7 @@ class TestRollbackMechanism:
             if "structural issues" in a.lower() or "security patterns" in a.lower()
         ]
         if not cross_check_sourced:
-            pytest.skip("no cross-check disagreements on this run — nothing to feed back")
+            pytest.skip("no cross-check disagreements on this run; nothing to feed back")
 
         # The SpecializationPhase logs each application of rollback adjustments.
         # Those DECISION events must carry the cross-check-derived text forward.
@@ -171,7 +175,7 @@ class TestRollbackMechanism:
     def test_prompt_diff_logged_after_rollback(self, poor_fake_llm: FakeLLM) -> None:
         """After at least one rollback, the journal carries a diff-summary decision.
 
-        We don't care about the exact line counts — only that the agent
+        We don't care about the exact line counts; only that the agent
         noticed the prompt was re-composed and left an audit trail for it.
         """
         config = StemAgentConfig(
@@ -181,7 +185,9 @@ class TestRollbackMechanism:
             max_rollback_attempts=2,
         )
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent = StemAgent(
+            config=config, llm=poor_fake_llm, storage=InMemoryStorage(), corpus=corpus
+        )
         agent.differentiate(domain="code_quality_analysis")
 
         decisions = agent.journal.get_events_by_type(EventType.DECISION)
@@ -199,7 +205,9 @@ class TestRollbackMechanism:
             max_rollback_attempts=1,
         )
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent = StemAgent(
+            config=config, llm=poor_fake_llm, storage=InMemoryStorage(), corpus=corpus
+        )
         agent.differentiate(domain="code_quality_analysis")
 
         journal = agent.journal
@@ -218,7 +226,9 @@ class TestRollbackMechanism:
             max_rollback_attempts=2,
         )
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=poor_fake_llm, corpus=corpus)
+        agent = StemAgent(
+            config=config, llm=poor_fake_llm, storage=InMemoryStorage(), corpus=corpus
+        )
         agent.differentiate(domain="code_quality_analysis")
 
         journal = agent.journal
@@ -235,7 +245,7 @@ class TestJournalPersistence:
         self, config: StemAgentConfig, fake_llm: FakeLLM
     ) -> None:
         corpus = get_benchmark_corpus()
-        agent = StemAgent(config=config, llm=fake_llm, corpus=corpus)
+        agent = StemAgent(config=config, llm=fake_llm, storage=InMemoryStorage(), corpus=corpus)
         agent.differentiate(domain="code_quality_analysis")
 
         from stem_agent.core.journal import EvolutionJournal
@@ -261,7 +271,7 @@ class TestMultiDomainSpecialization:
         should end up with visibly different prompts and capability sets.
 
         This test asserts architectural generalisation, not benchmark
-        quality — the thresholds are pinned low so FakeLLM's generic
+        quality; the thresholds are pinned low so FakeLLM's generic
         review responses don't gate the assertion we actually care about.
         """
         from stem_agent.evaluation.fixtures.security_audit_samples import (
@@ -275,18 +285,33 @@ class TestMultiDomainSpecialization:
             max_rollback_attempts=1,
         )
 
-        cq_agent = StemAgent(config=permissive, llm=fake_llm, corpus=get_benchmark_corpus())
+        cq_agent = StemAgent(
+            config=permissive,
+            llm=fake_llm,
+            storage=InMemoryStorage(),
+            corpus=get_benchmark_corpus(),
+        )
         assert cq_agent.differentiate(domain="code_quality_analysis") is True
         cq_config = cq_agent.agent_config
         assert cq_config is not None
 
-        sec_agent = StemAgent(config=permissive, llm=fake_llm, corpus=get_security_audit_corpus())
+        sec_agent = StemAgent(
+            config=permissive,
+            llm=fake_llm,
+            storage=InMemoryStorage(),
+            corpus=get_security_audit_corpus(),
+        )
         assert sec_agent.differentiate(domain="security_audit") is True
         sec_config = sec_agent.agent_config
         assert sec_config is not None
 
-        # Security specialisation is strictly narrower than code-quality.
-        assert set(sec_config.capabilities) < set(cq_config.capabilities)
+        # Compare the registered-capability axis only; generated proposals
+        # admit/reject under different rules (overlapping partition bypasses
+        # the empirical-holdout gate, registered-only set is the architectural
+        # signal we care about here).
+        cq_registered = {c for c in cq_config.capabilities if not c.startswith("input_")}
+        sec_registered = {c for c in sec_config.capabilities if not c.startswith("input_")}
+        assert sec_registered < cq_registered
         assert "security_analysis" in sec_config.capabilities
         assert "structural_analysis" not in sec_config.capabilities
         assert "performance_analysis" not in sec_config.capabilities
@@ -300,16 +325,16 @@ class TestMultiDomainSpecialization:
 class TestBenchmarkCorpus:
     """The benchmark corpus itself is well-formed."""
 
-    def test_corpus_has_20_samples(self) -> None:
+    def test_corpus_has_19_samples(self) -> None:
         corpus = get_benchmark_corpus()
-        assert len(corpus) == 20
+        assert len(corpus) == 19
 
     def test_corpus_distribution(self) -> None:
         """Verify the category distribution matches the specification."""
         corpus = get_benchmark_corpus()
         buggy = [s for s in corpus if not s.is_clean]
         clean = [s for s in corpus if s.is_clean]
-        assert len(buggy) == 15
+        assert len(buggy) == 14
         assert len(clean) == 5
 
     def test_all_buggy_samples_have_categories(self) -> None:

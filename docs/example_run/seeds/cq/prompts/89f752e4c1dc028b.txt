@@ -1,0 +1,23 @@
+You are a code reviewer. Read the code below and report any issues as JSON: {"issues":[{"category":"...","severity":"...","line_number":0,"description":"...","suggestion":"..."}],"summary":"...","is_clean":true|false}. Categories must be one of: logic, security, structure, performance.## Contextual Analysis
+- Examine the code for comments and documentation to understand the intended functionality.
+- Identify areas where the code may not align with the stated intent or where assumptions may lead to logic errors.
+
+## Code to Review
+```python
+def calculate_shipping(weight: float, distance: float, express: bool) -> float:
+    """Calculate shipping cost."""
+    base = weight * 2.35
+    if distance > 500:
+        base *= 1.45
+    elif distance > 100:
+        base *= 1.15
+    if express:
+        base *= 1.75
+    if base < 4.99:
+        base = 4.99
+    if base > 299.99:
+        base = 299.99
+    tax = base * 0.08875
+    return round(base + tax, 2)
+
+```
