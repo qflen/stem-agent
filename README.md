@@ -6,7 +6,7 @@ A self-specializing AI agent that evolves from an undifferentiated core into a t
 
 Full writeup: [`docs/writeup.pdf`](docs/writeup.pdf) (4 pages).
 
-https://github.com/user-attachments/assets/2da6098c-45eb-47ce-b338-03519fb83a08
+https://github.com/user-attachments/assets/caa352ec-5c6c-4c03-8fbd-0974e7d68d0a
 
 The clip above replays a recorded run (no live API calls). The current
 headline is computed across **3 seeds × 2 domains** (live OpenAI runs,

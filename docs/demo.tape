@@ -13,15 +13,15 @@ Type "setopt interactivecomments" Enter
 Type "clear" Enter
 Show
 
-Type "# A real differentiation run, replayed from its evolution journal."
+Type "# Replay the best cq seed of a 3-seed live run (11-sample validation slice)."
 Enter
-Type ".venv/bin/stem-agent journal --path docs/example_run/journal.json | head -36"
+Type ".venv/bin/stem-agent journal --path docs/example_run/seeds/cq/journal_seed1.json | head -36"
 Enter
-Sleep 5s
+Sleep 6s
 
 Type "clear" Enter
-Type "# Baseline F1 0.000 -> Specialized F1 0.778 on the 20-sample benchmark."
+Type "# Bootstrap mean and 95% CI pooled across the 3 cq seeds."
 Enter
-Type "grep -E 'baseline_f1|specialized_f1|f1_delta' docs/example_run/journal.json | head -8"
+Type ".venv/bin/stem-agent report docs/example_run/seeds/cq"
 Enter
 Sleep 4s
